@@ -59,6 +59,19 @@ final class RepositorioEventos
      */
     public function publicados(): array
     {
+        if (! $this->enPruebas()) {
+            try {
+                $filas = db_connect()->table('eventos')->select('slug, nombre')->orderBy('nombre')->get()->getResultArray();
+                if ($filas !== []) {
+                    return array_map(
+                        static fn (array $fila): array => ['slug' => (string) $fila['slug'], 'nombre' => (string) $fila['nombre']],
+                        $filas,
+                    );
+                }
+            } catch (\Throwable) {
+            }
+        }
+
         $eventos = [];
         foreach ($this->slugsSemilla() as $slug) {
             $programa = $this->desdeArchivo($slug);
@@ -68,6 +81,60 @@ final class RepositorioEventos
         }
 
         return $eventos;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function datos(string $slug): ?array
+    {
+        if (! $this->slugValido($slug) || $this->enPruebas()) {
+            return $this->leerSemilla($slug);
+        }
+
+        try {
+            $fila = db_connect()->table('eventos')->where('slug', $slug)->get()->getRowArray();
+        } catch (\Throwable) {
+            return $this->leerSemilla($slug);
+        }
+        if (! is_array($fila)) {
+            return null;
+        }
+        $datos = json_decode((string) $fila['programa_json'], true);
+
+        return is_array($datos) ? $datos : null;
+    }
+
+    /**
+     * @param array<string, mixed> $datos
+     */
+    public function guardarPrograma(string $slug, array $datos, bool $nuevo): string
+    {
+        if (! $this->slugValido($slug)) {
+            return 'slug';
+        }
+        $db = db_connect();
+        $existe = $db->table('eventos')->where('slug', $slug)->countAllResults() > 0;
+        if ($nuevo && $existe) {
+            return 'existe';
+        }
+        if (! $nuevo && ! $existe) {
+            return 'no_existe';
+        }
+        $fila = [
+            'nombre' => (string) $datos['nombre'],
+            'programa_json' => json_encode($datos, JSON_UNESCAPED_UNICODE),
+        ];
+        if ($nuevo) {
+            $db->table('eventos')->insert($fila + [
+                'slug' => $slug,
+                'creado_en' => date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            $db->table('eventos')->where('slug', $slug)->update($fila);
+        }
+
+        return 'ok';
     }
 
     /**

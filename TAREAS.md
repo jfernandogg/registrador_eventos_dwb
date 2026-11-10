@@ -14,13 +14,13 @@ Estado al 10 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 - [x] Git en `main`. Punto anterior: `aa7c994`. Corte con la base de datos: `532ac48`
 - [x] La página pública es `/e/{slug}`. `/tour-365` solo redirige. El evento sale de la fila o del JSON de semilla, no de una clase del controlador
 - [x] La ficha se pinta desde el esquema del evento. El navegador exige los campos marcados como obligatorios, sin una lista fija de nombres
+- [x] Diseñador de eventos en `/admin`: cursos, precios, comidas, franjas, alojamiento, pagos, equipos y ficha. Un evento nuevo se abre en `/e/{slug}` sin tocar código
 
 ## Siguiente
 
-- [ ] Login del backoffice: invitación, contraseña y roles
+- [ ] Login del backoffice: invitación, contraseña y roles. Hoy hay una puerta temporal, no ese sistema
 - [ ] Listado de inscritos, comprobantes y notas de alojamiento
 - [ ] Textos de cuenta, llave Bre-b y enlace Bold por el total de cada persona
-- [ ] Diseñador visual para crear otro evento sin tocar código
 - [ ] Publicar en GoDaddy con el selector de PHP en 8.3
 
 ## No bloquea el código
