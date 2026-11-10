@@ -40,7 +40,7 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
     <?php foreach ($recibo['notas'] as $nota): ?>
         <p><?= esc($nota) ?></p>
     <?php endforeach ?>
-    <p><a href="<?= site_url('tour-365') ?>">Nueva inscripción</a></p>
+    <p><a href="<?= site_url('e/' . $slug) ?>">Nueva inscripción</a></p>
 </main>
 </body>
 </html>

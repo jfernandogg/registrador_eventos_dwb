@@ -1,0 +1,424 @@
+{
+    "nombre": "Tour 365 Colombia",
+    "precio_comida": 8000,
+    "precio_franja": 100000,
+    "cursos": [
+        {
+            "codigo": "charla_bogota",
+            "nombre": "Charla pública Bogotá",
+            "tarifa": 0
+        },
+        {
+            "codigo": "bucaramanga",
+            "nombre": "Curso Bucaramanga",
+            "tarifa": 80000
+        },
+        {
+            "codigo": "kpl",
+            "nombre": "Curso KPL",
+            "tarifa": 150000
+        }
+    ],
+    "comidas": [
+        {
+            "id": "b24_cena",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "24 nov, cena"
+        },
+        {
+            "id": "b25_desayuno",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "25 nov, desayuno"
+        },
+        {
+            "id": "b25_almuerzo",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "25 nov, almuerzo"
+        },
+        {
+            "id": "b25_cena",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "25 nov, cena"
+        },
+        {
+            "id": "b26_desayuno",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "26 nov, desayuno"
+        },
+        {
+            "id": "b26_almuerzo",
+            "codigo_curso": "bucaramanga",
+            "etiqueta": "26 nov, almuerzo"
+        },
+        {
+            "id": "k27_cena",
+            "codigo_curso": "kpl",
+            "etiqueta": "27 nov, cena"
+        },
+        {
+            "id": "k28_desayuno",
+            "codigo_curso": "kpl",
+            "etiqueta": "28 nov, desayuno"
+        },
+        {
+            "id": "k28_almuerzo",
+            "codigo_curso": "kpl",
+            "etiqueta": "28 nov, almuerzo"
+        },
+        {
+            "id": "k28_cena",
+            "codigo_curso": "kpl",
+            "etiqueta": "28 nov, cena"
+        },
+        {
+            "id": "k29_desayuno",
+            "codigo_curso": "kpl",
+            "etiqueta": "29 nov, desayuno"
+        }
+    ],
+    "franjas": [
+        {
+            "id": "kpl_ida_1400",
+            "codigo_curso": "kpl",
+            "sentido": "ida",
+            "etiqueta": "27 nov, 14:00, Living Center Bogotá → KPL"
+        },
+        {
+            "id": "kpl_ida_1900",
+            "codigo_curso": "kpl",
+            "sentido": "ida",
+            "etiqueta": "27 nov, 19:00, Living Center Bogotá → KPL"
+        },
+        {
+            "id": "kpl_salida_0900",
+            "codigo_curso": "kpl",
+            "sentido": "regreso",
+            "etiqueta": "Salida 9:00, KPL → Living Center Bogotá. No se completa el resto del curso"
+        }
+    ],
+    "formas_pago": [
+        {
+            "codigo": "efectivo",
+            "etiqueta": "Pago en sitio",
+            "cobra": false,
+            "comprobante": false
+        },
+        {
+            "codigo": "ruta",
+            "etiqueta": "Ruta budista",
+            "cobra": false,
+            "comprobante": false
+        },
+        {
+            "codigo": "tarjeta",
+            "etiqueta": "Tarjeta de crédito (Bold)",
+            "cobra": true,
+            "comprobante": true
+        },
+        {
+            "codigo": "tarjeta_ruta",
+            "etiqueta": "Tarjeta + Ruta budista",
+            "cobra": false,
+            "comprobante": false
+        },
+        {
+            "codigo": "transferencia",
+            "etiqueta": "Transferencia bancaria",
+            "cobra": true,
+            "comprobante": true
+        },
+        {
+            "codigo": "transferencia_ruta",
+            "etiqueta": "Transferencia + Ruta budista",
+            "cobra": false,
+            "comprobante": false
+        }
+    ],
+    "equipos": [
+        {
+            "codigo": "aseo",
+            "etiqueta": "Aseo general",
+            "solo_curso": null
+        },
+        {
+            "codigo": "traveling",
+            "etiqueta": "Atención traveling teachers",
+            "solo_curso": null
+        },
+        {
+            "codigo": "cafeteria",
+            "etiqueta": "Cafetería",
+            "solo_curso": null
+        },
+        {
+            "codigo": "camping",
+            "etiqueta": "Equipos de camping",
+            "solo_curso": "kpl"
+        },
+        {
+            "codigo": "job_center",
+            "etiqueta": "Job center",
+            "solo_curso": null
+        },
+        {
+            "codigo": "alimentos",
+            "etiqueta": "Preparación de alimentos",
+            "solo_curso": null
+        },
+        {
+            "codigo": "gompa",
+            "etiqueta": "Preparación de gompa",
+            "solo_curso": null
+        }
+    ],
+    "tipos_documento": {
+        "CC": "CC",
+        "TI": "TI",
+        "CE": "CE",
+        "pasaporte": "Pasaporte"
+    },
+    "centros": {
+        "bogota": "Bogotá",
+        "bucaramanga": "Bucaramanga",
+        "medellin": "Medellín",
+        "cali": "Cali",
+        "kpl": "KPL",
+        "otro": "Otro"
+    },
+    "seguros": {
+        "assist_card": "Assist Card",
+        "eps": "EPS",
+        "prepagada": "Prepagada",
+        "otro": "Otro"
+    },
+    "parentescos": {
+        "amigo": "Amigo\/a",
+        "conyuge": "Cónyuge",
+        "hermano": "Hermano\/a",
+        "hijo": "Hijo\/a",
+        "padre": "Padre\/Madre",
+        "otro": "Otro"
+    },
+    "bandas_edad": {
+        "menor_7": "Menor de 7 años",
+        "de_7_a_14": "De 7 a 14 años",
+        "mayor_14": "Mayor de 14 años"
+    },
+    "alojamientos": {
+        "kpl": {
+            "opciones": {
+                "no": "No duermo en el curso",
+                "carpa": "Carpa",
+                "cama": "Cama por condición especial"
+            },
+            "pernocta_extra": true
+        }
+    },
+    "ficha": [
+        {
+            "clave": "nombre",
+            "etiqueta": "Nombre completo",
+            "tipo": "texto",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "nombre",
+            "mensaje": "Escribe el nombre completo.",
+            "hijos": []
+        },
+        {
+            "clave": "tipo_documento",
+            "etiqueta": "Tipo de documento",
+            "tipo": "lista",
+            "requerido": true,
+            "opciones": {
+                "CC": "CC",
+                "TI": "TI",
+                "CE": "CE",
+                "pasaporte": "Pasaporte"
+            },
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "Elige el tipo de documento.",
+            "hijos": []
+        },
+        {
+            "clave": "documento",
+            "etiqueta": "Número de documento",
+            "tipo": "texto",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "documento",
+            "mensaje": "Escribe el número de documento.",
+            "hijos": []
+        },
+        {
+            "clave": "edad",
+            "etiqueta": "Edad",
+            "tipo": "lista",
+            "requerido": true,
+            "opciones": {
+                "menor_7": "Menor de 7 años",
+                "de_7_a_14": "De 7 a 14 años",
+                "mayor_14": "Mayor de 14 años"
+            },
+            "visible_si": "",
+            "rol": "edad",
+            "mensaje": "Elige la banda de edad.",
+            "hijos": []
+        },
+        {
+            "clave": "telefono",
+            "etiqueta": "Teléfono",
+            "tipo": "telefono",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "Escribe el teléfono.",
+            "hijos": []
+        },
+        {
+            "clave": "correo",
+            "etiqueta": "Correo",
+            "tipo": "email",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "correo",
+            "mensaje": "Escribe un correo válido.",
+            "hijos": []
+        },
+        {
+            "clave": "centro",
+            "etiqueta": "Centro",
+            "tipo": "lista",
+            "requerido": true,
+            "opciones": {
+                "bogota": "Bogotá",
+                "bucaramanga": "Bucaramanga",
+                "medellin": "Medellín",
+                "cali": "Cali",
+                "kpl": "KPL",
+                "otro": "Otro"
+            },
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "Elige el centro.",
+            "hijos": []
+        },
+        {
+            "clave": "centro_otro",
+            "etiqueta": "Si elegiste otro, ¿cuál?",
+            "tipo": "texto",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "centro=otro",
+            "rol": "",
+            "mensaje": "Escribe cuál centro.",
+            "hijos": []
+        },
+        {
+            "clave": "seguro",
+            "etiqueta": "Seguro médico",
+            "tipo": "lista",
+            "requerido": true,
+            "opciones": {
+                "assist_card": "Assist Card",
+                "eps": "EPS",
+                "prepagada": "Prepagada",
+                "otro": "Otro"
+            },
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "Elige el seguro médico.",
+            "hijos": []
+        },
+        {
+            "clave": "datos_seguro",
+            "etiqueta": "Nombre de la EPS o datos del seguro",
+            "tipo": "texto",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "Escribe el nombre de la EPS o los datos del seguro.",
+            "hijos": []
+        },
+        {
+            "clave": "emergencia",
+            "etiqueta": "Contacto de emergencia",
+            "tipo": "grupo",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "",
+            "mensaje": "",
+            "hijos": [
+                {
+                    "clave": "emergencia_nombre",
+                    "etiqueta": "Nombre",
+                    "tipo": "texto",
+                    "requerido": true,
+                    "opciones": [],
+                    "visible_si": "",
+                    "rol": "",
+                    "mensaje": "Escribe el nombre del contacto de emergencia.",
+                    "hijos": []
+                },
+                {
+                    "clave": "emergencia_parentesco",
+                    "etiqueta": "Parentesco",
+                    "tipo": "lista",
+                    "requerido": true,
+                    "opciones": {
+                        "amigo": "Amigo\/a",
+                        "conyuge": "Cónyuge",
+                        "hermano": "Hermano\/a",
+                        "hijo": "Hijo\/a",
+                        "padre": "Padre\/Madre",
+                        "otro": "Otro"
+                    },
+                    "visible_si": "",
+                    "rol": "",
+                    "mensaje": "Elige el parentesco.",
+                    "hijos": []
+                },
+                {
+                    "clave": "emergencia_parentesco_otro",
+                    "etiqueta": "Si elegiste otro, ¿cuál?",
+                    "tipo": "texto",
+                    "requerido": true,
+                    "opciones": [],
+                    "visible_si": "emergencia_parentesco=otro",
+                    "rol": "",
+                    "mensaje": "Escribe cuál parentesco.",
+                    "hijos": []
+                },
+                {
+                    "clave": "emergencia_telefono",
+                    "etiqueta": "Teléfono",
+                    "tipo": "telefono",
+                    "requerido": true,
+                    "opciones": [],
+                    "visible_si": "",
+                    "rol": "",
+                    "mensaje": "Escribe el teléfono del contacto de emergencia.",
+                    "hijos": []
+                }
+            ]
+        },
+        {
+            "clave": "consentimiento",
+            "etiqueta": "Autorizo el tratamiento de mis datos para esta inscripción.",
+            "tipo": "si_no",
+            "requerido": true,
+            "opciones": [],
+            "visible_si": "",
+            "rol": "consentimiento",
+            "mensaje": "Hace falta autorizar el tratamiento de datos.",
+            "hijos": []
+        }
+    ]
+}

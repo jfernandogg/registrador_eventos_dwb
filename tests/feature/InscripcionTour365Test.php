@@ -12,7 +12,7 @@ final class InscripcionTour365Test extends CIUnitTestCase
 
     public function testMuestraElFormulario(): void
     {
-        $result = $this->get('/tour-365');
+        $result = $this->get('/e/tour-365');
 
         $result->assertOK();
         $result->assertSee('Tour 365 Colombia');
@@ -21,7 +21,7 @@ final class InscripcionTour365Test extends CIUnitTestCase
 
     public function testVerTotalDeLuis(): void
     {
-        $result = $this->post('/tour-365', [
+        $result = $this->post('/e/tour-365', [
             'accion' => 'actualizar',
             'edad' => 'mayor_14',
             'cursos' => ['kpl'],
@@ -42,7 +42,7 @@ final class InscripcionTour365Test extends CIUnitTestCase
 
     public function testSegundoVerTotalSumaLasComidas(): void
     {
-        $result = $this->post('/tour-365', [
+        $result = $this->post('/e/tour-365', [
             'accion' => 'actualizar',
             'edad' => 'mayor_14',
             'cursos' => ['kpl'],
@@ -59,7 +59,7 @@ final class InscripcionTour365Test extends CIUnitTestCase
 
     public function testCotizarRespondeJson(): void
     {
-        $result = $this->post('/tour-365/cotizar', [
+        $result = $this->post('/e/tour-365/cotizar', [
             'edad' => 'mayor_14',
             'cursos' => ['kpl'],
             'comidas' => ['k27_cena'],

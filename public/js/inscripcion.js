@@ -111,21 +111,19 @@
                 faltan.push(mensaje);
             }
         };
-        exigir(valor('nombre') !== '', 'Escribe el nombre completo.');
-        exigir(valor('tipo_documento') !== '', 'Elige el tipo de documento.');
-        exigir(valor('documento') !== '', 'Escribe el número de documento.');
-        exigir(valor('edad') !== '', 'Elige la banda de edad.');
-        exigir(valor('telefono') !== '', 'Escribe el teléfono.');
-        exigir(valor('correo').includes('@'), 'Escribe un correo válido.');
-        exigir(valor('centro') !== '', 'Elige el centro.');
-        exigir(valor('centro') !== 'otro' || valor('centro_otro') !== '', 'Escribe cuál centro.');
-        exigir(valor('seguro') !== '', 'Elige el seguro médico.');
-        exigir(valor('datos_seguro') !== '', 'Escribe los datos del seguro.');
-        exigir(valor('emergencia_nombre') !== '', 'Escribe el contacto de emergencia.');
-        exigir(valor('emergencia_parentesco') !== '', 'Elige el parentesco.');
-        exigir(valor('emergencia_parentesco') !== 'otro' || valor('emergencia_parentesco_otro') !== '', 'Escribe cuál parentesco.');
-        exigir(valor('emergencia_telefono') !== '', 'Escribe el teléfono del contacto.');
-        exigir(campo('consentimiento')?.checked, 'Autoriza el tratamiento de datos.');
+        form.querySelectorAll('[data-requerido="1"]').forEach((control) => {
+            if (control.disabled || control.closest('.oculto')) {
+                return;
+            }
+            const mensaje = control.dataset.mensaje || 'Completa este campo.';
+            if (control.type === 'checkbox') {
+                exigir(control.checked, mensaje);
+            } else if (control.type === 'email') {
+                exigir(control.value.includes('@'), mensaje);
+            } else {
+                exigir(control.value.trim() !== '', mensaje);
+            }
+        });
         exigir(cursosMarcados().length > 0, 'Elige al menos un curso.');
 
         cursosMarcados().forEach((curso) => {

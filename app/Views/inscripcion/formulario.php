@@ -60,7 +60,7 @@ $cursosElegidos = array_values(array_filter(
 <body>
 <main>
     <h1><?= esc($programa->nombre) ?></h1>
-    <p class="lead">Al marcar un curso aparecen sus preguntas. El total se actualiza solo: cada comida suma 8.000 y cada bus del curso, 100.000. La dieta, los equipos y el alojamiento no cambian el valor.</p>
+    <p class="lead">Al marcar un curso aparecen sus preguntas. El total se actualiza solo: cada comida suma <?= $pesos($programa->catalogo->precioComida) ?> y cada bus del curso, <?= $pesos($programa->catalogo->precioFranjaBus) ?>. La dieta, los equipos y el alojamiento no cambian el valor.</p>
     <aside id="total">
         <p>Total en línea</p>
         <strong id="total-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></strong>
@@ -78,81 +78,12 @@ $cursosElegidos = array_values(array_filter(
         </div>
     </aside>
     <ul id="avisos" class="oculto"></ul>
-    <?= form_open_multipart('/tour-365', ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('tour-365/cotizar')]) ?>
+    <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar')]) ?>
 
     <h2>Tus datos</h2>
-    <div class="fila">
-        <label>Nombre completo <input name="nombre" value="<?= $valor('nombre') ?>" required><?= $error('nombre') ?></label>
-        <label>Tipo de documento
-            <select name="tipo_documento" required>
-                <option value="">Elige</option>
-                <?php foreach ($programa->tiposDocumento as $codigo => $etiqueta): ?>
-                    <option value="<?= esc($codigo) ?>" <?= $valor('tipo_documento') === $codigo ? 'selected' : '' ?>><?= esc($etiqueta) ?></option>
-                <?php endforeach ?>
-            </select>
-            <?= $error('tipo_documento') ?>
-        </label>
-    </div>
-    <div class="fila">
-        <label>Número de documento <input name="documento" value="<?= $valor('documento') ?>" required><?= $error('documento') ?></label>
-        <label>Edad
-            <select name="edad" required>
-                <option value="">Elige</option>
-                <?php foreach ($programa->bandasEdad as $codigo => $etiqueta): ?>
-                    <option value="<?= esc($codigo) ?>" <?= $valor('edad') === $codigo ? 'selected' : '' ?>><?= esc($etiqueta) ?></option>
-                <?php endforeach ?>
-            </select>
-            <?= $error('edad') ?>
-        </label>
-    </div>
-    <div class="fila">
-        <label>Teléfono <input name="telefono" value="<?= $valor('telefono') ?>" required><?= $error('telefono') ?></label>
-        <label>Correo <input type="email" name="correo" value="<?= $valor('correo') ?>" required><?= $error('correo') ?></label>
-    </div>
-    <div class="fila">
-        <label>Centro
-            <select name="centro" required>
-                <option value="">Elige</option>
-                <?php foreach ($programa->centros as $codigo => $etiqueta): ?>
-                    <option value="<?= esc($codigo) ?>" <?= $valor('centro') === $codigo ? 'selected' : '' ?>><?= esc($etiqueta) ?></option>
-                <?php endforeach ?>
-            </select>
-            <?= $error('centro') ?>
-        </label>
-        <label class="depende<?= $valor('centro') === 'otro' ? '' : ' oculto' ?>" data-si="centro=otro">Si elegiste otro, ¿cuál? <input name="centro_otro" value="<?= $valor('centro_otro') ?>"><?= $error('centro_otro') ?></label>
-    </div>
-    <div class="fila">
-        <label>Seguro médico
-            <select name="seguro" required>
-                <option value="">Elige</option>
-                <?php foreach ($programa->seguros as $codigo => $etiqueta): ?>
-                    <option value="<?= esc($codigo) ?>" <?= $valor('seguro') === $codigo ? 'selected' : '' ?>><?= esc($etiqueta) ?></option>
-                <?php endforeach ?>
-            </select>
-            <?= $error('seguro') ?>
-        </label>
-        <label>Nombre de la EPS o datos del seguro <input name="datos_seguro" value="<?= $valor('datos_seguro') ?>" required><?= $error('datos_seguro') ?></label>
-    </div>
-    <fieldset>
-        <legend>Contacto de emergencia</legend>
-        <div class="fila">
-            <label>Nombre <input name="emergencia_nombre" value="<?= $valor('emergencia_nombre') ?>" required><?= $error('emergencia_nombre') ?></label>
-            <label>Parentesco
-                <select name="emergencia_parentesco" required>
-                    <option value="">Elige</option>
-                    <?php foreach ($programa->parentescos as $codigo => $etiqueta): ?>
-                        <option value="<?= esc($codigo) ?>" <?= $valor('emergencia_parentesco') === $codigo ? 'selected' : '' ?>><?= esc($etiqueta) ?></option>
-                    <?php endforeach ?>
-                </select>
-                <?= $error('emergencia_parentesco') ?>
-            </label>
-        </div>
-        <div class="fila">
-            <label class="depende<?= $valor('emergencia_parentesco') === 'otro' ? '' : ' oculto' ?>" data-si="emergencia_parentesco=otro">Si elegiste otro, ¿cuál? <input name="emergencia_parentesco_otro" value="<?= $valor('emergencia_parentesco_otro') ?>"><?= $error('emergencia_parentesco_otro') ?></label>
-            <label>Teléfono <input name="emergencia_telefono" value="<?= $valor('emergencia_telefono') ?>" required><?= $error('emergencia_telefono') ?></label>
-        </div>
-    </fieldset>
-    <label class="check"><input type="checkbox" name="consentimiento" value="1" <?= $valor('consentimiento') === '1' ? 'checked' : '' ?>> Autorizo el tratamiento de mis datos para esta inscripción.<?= $error('consentimiento') ?></label>
+    <?php foreach ($programa->ficha as $campo): ?>
+        <?= view('inscripcion/campo', ['campo' => $campo, 'entrada' => $entrada, 'errores' => $errores]) ?>
+    <?php endforeach ?>
 
     <h2>Cursos</h2>
     <?= $error('cursos') ?>
@@ -226,7 +157,7 @@ $cursosElegidos = array_values(array_filter(
                     <select name="alojamiento_<?= esc($curso->codigo) ?>">
                         <option value="">Elige</option>
                         <?php foreach ($alojamiento['opciones'] as $codigoOpcion => $etiquetaOpcion): ?>
-                            <option value="<?= esc($codigoOpcion) ?>" <?= $valor('alojamiento_' . $curso->codigo) === $codigoOpcion || ($curso->codigo === 'kpl' && $valor('alojamiento_kpl') === $codigoOpcion) ? 'selected' : '' ?>><?= esc($etiquetaOpcion) ?></option>
+                            <option value="<?= esc($codigoOpcion) ?>" <?= $valor('alojamiento_' . $curso->codigo) === $codigoOpcion ? 'selected' : '' ?>><?= esc($etiquetaOpcion) ?></option>
                         <?php endforeach ?>
                     </select>
                     <?= $error('alojamiento_' . $curso->codigo) ?>

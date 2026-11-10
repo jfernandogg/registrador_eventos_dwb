@@ -4,8 +4,8 @@ namespace App\Controllers;
 
 use App\Domain\AsistenteInscripcion;
 use App\Domain\ProgramaEvento;
-use App\Domain\Tour365;
 use App\Persistencia\RepositorioEventos;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -16,8 +16,6 @@ class Inscripcion extends BaseController
 
     private RepositorioEventos $eventos;
 
-    private string $slug = 'tour-365';
-
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         $this->helpers = ['form', 'url'];
@@ -26,15 +24,20 @@ class Inscripcion extends BaseController
         $this->eventos = new RepositorioEventos();
     }
 
-    public function index()
+    public function portada()
     {
-        return view('inscripcion/formulario', $this->datos(null, []));
+        return view('inscripcion/portada', ['eventos' => $this->eventos->publicados()]);
     }
 
-    public function cotizar()
+    public function index(string $slug)
+    {
+        return view('inscripcion/formulario', $this->datos($this->programa($slug), $slug, null, []));
+    }
+
+    public function cotizar(string $slug)
     {
         $resultado = $this->asistente->procesar(
-            Tour365::programa(),
+            $this->programa($slug),
             $this->request->getPost() ?? [],
             false,
             false,
@@ -60,18 +63,20 @@ class Inscripcion extends BaseController
         ]);
     }
 
-    public function enviar()
+    public function enviar(string $slug)
     {
+        $programa = $this->programa($slug);
         $confirmar = $this->request->getPost('accion') === 'confirmar';
         $archivo = $this->request->getFile('comprobante');
         $guardado = $this->nombreGuardado((string) ($this->request->getPost('comprobante_guardado') ?? ''));
-        $carga = $this->guardarComprobante($archivo, (string) ($this->request->getPost('documento') ?? 'comprobante'));
+        $claveDocumento = $programa->claveConRol('documento') ?? 'documento';
+        $carga = $this->guardarComprobante($archivo, (string) ($this->request->getPost($claveDocumento) ?? 'comprobante'));
         if ($carga['nombre'] !== null) {
             $guardado = $carga['nombre'];
         }
 
         $resultado = $this->asistente->procesar(
-            Tour365::programa(),
+            $programa,
             $this->request->getPost() ?? [],
             $confirmar,
             $guardado !== null,
@@ -86,34 +91,33 @@ class Inscripcion extends BaseController
         if ($confirmar && $errores === []) {
             $recibo = $resultado->congelar(date('Y-m-d H:i'));
             $recibo['comprobante'] = $guardado ?? '';
-            $guardadoDb = $this->eventos->guardar($this->slug, $recibo, $entrada, $guardado);
+            $recibo['documento'] = $programa->valorRol($entrada, 'documento');
+            $recibo['nombre'] = $programa->valorRol($entrada, 'nombre') ?: (string) $recibo['nombre'];
+            $guardadoDb = $this->eventos->guardar($slug, $recibo, $entrada, $guardado);
             if ($guardadoDb['estado'] === 'duplicada') {
-                $errores['documento'] = 'Ya hay una inscripción activa con este documento en este evento.';
+                $errores[$claveDocumento] = 'Ya hay una inscripción activa con este documento en este evento.';
             } elseif ($guardadoDb['estado'] !== 'guardada') {
-                $errores['documento'] = 'No se pudo guardar la inscripción. Intenta de nuevo.';
+                $errores[$claveDocumento] = 'No se pudo guardar la inscripción. Intenta de nuevo.';
             } else {
-                return redirect()->to('/tour-365/recibo/' . $guardadoDb['id']);
+                return redirect()->to('/e/' . $slug . '/recibo/' . $guardadoDb['id']);
             }
         }
 
-        return view('inscripcion/formulario', [
-            'programa' => Tour365::programa(),
-            'entrada' => $entrada,
-            'errores' => $errores,
-            'cotizacion' => $resultado->cotizacion,
-            'notas' => $resultado->notas,
-            'formaPago' => $resultado->formaPago,
-        ]);
+        return view('inscripcion/formulario', $this->datos($programa, $slug, $resultado, $entrada, $errores));
     }
 
-    public function recibo($id = null)
+    public function recibo(string $slug, $id = null)
     {
-        $recibo = $this->eventos->recibo($this->slug, (int) $id);
+        $recibo = $this->eventos->recibo($slug, (int) $id);
         if (! is_array($recibo)) {
-            return redirect()->to('/tour-365');
+            return redirect()->to('/e/' . $slug);
         }
 
-        return view('inscripcion/recibo', ['recibo' => $recibo, 'evento' => $recibo['evento']]);
+        return view('inscripcion/recibo', [
+            'recibo' => $recibo,
+            'evento' => $recibo['evento'],
+            'slug' => $slug,
+        ]);
     }
 
     /**
@@ -173,19 +177,31 @@ class Inscripcion extends BaseController
     }
 
     /**
-     * @param array<string, mixed> $entrada
+     * @param array<string, mixed>  $entrada
+     * @param array<string, string> $errores
      *
      * @return array<string, mixed>
      */
-    private function datos(?\App\Domain\ResultadoInscripcion $resultado, array $entrada): array
+    private function datos(ProgramaEvento $programa, string $slug, ?\App\Domain\ResultadoInscripcion $resultado, array $entrada, array $errores = []): array
     {
         return [
-            'programa' => Tour365::programa(),
+            'programa' => $programa,
+            'slug' => $slug,
             'entrada' => $entrada,
-            'errores' => $resultado?->errores ?? [],
+            'errores' => $errores !== [] ? $errores : ($resultado?->errores ?? []),
             'cotizacion' => $resultado?->cotizacion,
             'notas' => $resultado?->notas ?? [],
             'formaPago' => $resultado?->formaPago,
         ];
+    }
+
+    private function programa(string $slug): ProgramaEvento
+    {
+        $programa = $this->eventos->programa($slug);
+        if ($programa === null) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        return $programa;
     }
 }

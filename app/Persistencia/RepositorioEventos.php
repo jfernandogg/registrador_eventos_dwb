@@ -6,25 +6,27 @@ namespace App\Persistencia;
 
 use App\Domain\ArchivoPrograma;
 use App\Domain\ProgramaEvento;
-use App\Domain\Tour365;
 
 /**
- * El evento vive en MariaDB. Tour 365 solo siembra la primera fila.
- * En las pruebas de PHPUnit no hay base: se usa la semilla en memoria.
+ * El evento vive en MariaDB. La semilla es un JSON por slug, no una clase del formulario.
+ * En las pruebas de PHPUnit no hay base: se lee el mismo JSON.
  */
 final class RepositorioEventos
 {
     public function programa(string $slug): ?ProgramaEvento
     {
+        if (! $this->slugValido($slug)) {
+            return null;
+        }
         if ($this->enPruebas()) {
-            return $slug === 'tour-365' ? Tour365::programa() : null;
+            return $this->desdeArchivo($slug);
         }
 
         try {
-            $this->sembrarSiFalta();
+            $this->sembrarSiFalta($slug);
             $fila = db_connect()->table('eventos')->where('slug', $slug)->get()->getRowArray();
         } catch (\Throwable) {
-            return $slug === 'tour-365' ? Tour365::programa() : null;
+            return $this->desdeArchivo($slug);
         }
 
         if (! is_array($fila)) {
@@ -38,18 +40,34 @@ final class RepositorioEventos
 
     public function id(string $slug): ?int
     {
-        if ($this->enPruebas()) {
+        if ($this->enPruebas() || ! $this->slugValido($slug)) {
             return null;
         }
 
         try {
-            $this->sembrarSiFalta();
+            $this->sembrarSiFalta($slug);
             $fila = db_connect()->table('eventos')->select('id')->where('slug', $slug)->get()->getRowArray();
         } catch (\Throwable) {
             return null;
         }
 
         return is_array($fila) ? (int) $fila['id'] : null;
+    }
+
+    /**
+     * @return list<array{slug: string, nombre: string}>
+     */
+    public function publicados(): array
+    {
+        $eventos = [];
+        foreach ($this->slugsSemilla() as $slug) {
+            $programa = $this->desdeArchivo($slug);
+            if ($programa !== null) {
+                $eventos[] = ['slug' => $slug, 'nombre' => $programa->nombre];
+            }
+        }
+
+        return $eventos;
     }
 
     /**
@@ -138,22 +156,70 @@ final class RepositorioEventos
         ] : null;
     }
 
-    private function sembrarSiFalta(): void
+    private function sembrarSiFalta(string $slug): void
     {
+        $datos = $this->leerSemilla($slug);
+        if ($datos === null) {
+            return;
+        }
+
         $db = db_connect();
-        if ($db->table('eventos')->where('slug', 'tour-365')->countAllResults() > 0) {
+        if ($db->table('eventos')->where('slug', $slug)->countAllResults() > 0) {
             return;
         }
 
         $db->table('eventos')->insert([
-            'slug' => 'tour-365',
-            'nombre' => Tour365::programa()->nombre,
-            'programa_json' => json_encode(
-                ArchivoPrograma::exportar(Tour365::programa()),
-                JSON_UNESCAPED_UNICODE,
-            ),
+            'slug' => $slug,
+            'nombre' => (string) $datos['nombre'],
+            'programa_json' => json_encode($datos, JSON_UNESCAPED_UNICODE),
             'creado_en' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    private function desdeArchivo(string $slug): ?ProgramaEvento
+    {
+        $datos = $this->leerSemilla($slug);
+
+        return is_array($datos) ? ArchivoPrograma::importar($datos) : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function leerSemilla(string $slug): ?array
+    {
+        if (! $this->slugValido($slug)) {
+            return null;
+        }
+        $ruta = APPPATH . 'Database/Seeds/eventos/' . $slug . '.json';
+        if (! is_file($ruta)) {
+            return null;
+        }
+        $datos = json_decode((string) file_get_contents($ruta), true);
+
+        return is_array($datos) ? $datos : null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function slugsSemilla(): array
+    {
+        $slugs = [];
+        foreach (glob(APPPATH . 'Database/Seeds/eventos/*.json') ?: [] as $archivo) {
+            $slug = basename($archivo, '.json');
+            if ($this->slugValido($slug)) {
+                $slugs[] = $slug;
+            }
+        }
+        sort($slugs);
+
+        return $slugs;
+    }
+
+    private function slugValido(string $slug): bool
+    {
+        return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug) === 1;
     }
 
     private function enPruebas(): bool
