@@ -65,28 +65,42 @@ final class RepositorioEventos
             return ['estado' => 'sin_evento', 'id' => null];
         }
 
-        $documento = (string) ($recibo['documento'] ?? '');
+        $documento = trim((string) ($recibo['documento'] ?? ''));
+        if ($documento === '') {
+            return ['estado' => 'sin_documento', 'id' => null];
+        }
+
         $db = db_connect();
-        $existe = $db->table('inscripciones')
+        $activa = $db->table('inscripciones')
             ->where('evento_id', $eventoId)
-            ->where('documento', $documento)
+            ->where('documento_activo', $documento)
             ->countAllResults();
-        if ($existe > 0) {
+        if ($activa > 0) {
             return ['estado' => 'duplicada', 'id' => null];
         }
 
-        $db->table('inscripciones')->insert([
-            'evento_id' => $eventoId,
-            'documento' => $documento,
-            'nombre' => (string) ($recibo['nombre'] ?? ''),
-            'correo' => (string) ($entrada['correo'] ?? ''),
-            'total' => (int) ($recibo['total'] ?? 0),
-            'estado' => 'activa',
-            'cotizacion_json' => json_encode($recibo, JSON_UNESCAPED_UNICODE),
-            'entrada_json' => json_encode($entrada, JSON_UNESCAPED_UNICODE),
-            'notas_json' => json_encode($recibo['notas'] ?? [], JSON_UNESCAPED_UNICODE),
-            'comprobante' => $comprobante,
-        ]);
+        try {
+            $db->table('inscripciones')->insert([
+                'evento_id' => $eventoId,
+                'documento' => $documento,
+                'documento_activo' => $documento,
+                'nombre' => (string) ($recibo['nombre'] ?? ''),
+                'correo' => (string) ($entrada['correo'] ?? ''),
+                'total' => (int) ($recibo['total'] ?? 0),
+                'estado' => 'activa',
+                'cotizacion_json' => json_encode($recibo, JSON_UNESCAPED_UNICODE),
+                'entrada_json' => json_encode($entrada, JSON_UNESCAPED_UNICODE),
+                'notas_json' => json_encode($recibo['notas'] ?? [], JSON_UNESCAPED_UNICODE),
+                'comprobante' => $comprobante,
+                'creado_en' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Throwable $error) {
+            if (str_contains($error->getMessage(), 'Duplicate')) {
+                return ['estado' => 'duplicada', 'id' => null];
+            }
+
+            return ['estado' => 'error', 'id' => null];
+        }
 
         return ['estado' => 'guardada', 'id' => (int) $db->insertID()];
     }
@@ -106,8 +120,10 @@ final class RepositorioEventos
         }
 
         $fila = db_connect()->table('inscripciones')
-            ->where('id', $id)
-            ->where('evento_id', $eventoId)
+            ->select('inscripciones.*, eventos.nombre AS evento_nombre')
+            ->join('eventos', 'eventos.id = inscripciones.evento_id')
+            ->where('inscripciones.id', $id)
+            ->where('inscripciones.evento_id', $eventoId)
             ->get()
             ->getRowArray();
         if (! is_array($fila)) {
@@ -116,7 +132,10 @@ final class RepositorioEventos
 
         $recibo = json_decode((string) $fila['cotizacion_json'], true);
 
-        return is_array($recibo) ? $recibo + ['id' => (int) $fila['id']] : null;
+        return is_array($recibo) ? $recibo + [
+            'id' => (int) $fila['id'],
+            'evento' => (string) $fila['evento_nombre'],
+        ] : null;
     }
 
     private function sembrarSiFalta(): void
@@ -133,6 +152,7 @@ final class RepositorioEventos
                 ArchivoPrograma::exportar(Tour365::programa()),
                 JSON_UNESCAPED_UNICODE,
             ),
+            'creado_en' => date('Y-m-d H:i:s'),
         ]);
     }
 

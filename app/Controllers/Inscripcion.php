@@ -3,7 +3,9 @@
 namespace App\Controllers;
 
 use App\Domain\AsistenteInscripcion;
+use App\Domain\ProgramaEvento;
 use App\Domain\Tour365;
+use App\Persistencia\RepositorioEventos;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -12,11 +14,16 @@ class Inscripcion extends BaseController
 {
     private AsistenteInscripcion $asistente;
 
+    private RepositorioEventos $eventos;
+
+    private string $slug = 'tour-365';
+
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
     {
         $this->helpers = ['form', 'url'];
         parent::initController($request, $response, $logger);
         $this->asistente = new AsistenteInscripcion();
+        $this->eventos = new RepositorioEventos();
     }
 
     public function index()
@@ -79,9 +86,14 @@ class Inscripcion extends BaseController
         if ($confirmar && $errores === []) {
             $recibo = $resultado->congelar(date('Y-m-d H:i'));
             $recibo['comprobante'] = $guardado ?? '';
-            session()->set('recibo_tour365', $recibo);
-
-            return redirect()->to('/tour-365/recibo');
+            $guardadoDb = $this->eventos->guardar($this->slug, $recibo, $entrada, $guardado);
+            if ($guardadoDb['estado'] === 'duplicada') {
+                $errores['documento'] = 'Ya hay una inscripción activa con este documento en este evento.';
+            } elseif ($guardadoDb['estado'] !== 'guardada') {
+                $errores['documento'] = 'No se pudo guardar la inscripción. Intenta de nuevo.';
+            } else {
+                return redirect()->to('/tour-365/recibo/' . $guardadoDb['id']);
+            }
         }
 
         return view('inscripcion/formulario', [
@@ -94,14 +106,14 @@ class Inscripcion extends BaseController
         ]);
     }
 
-    public function recibo()
+    public function recibo($id = null)
     {
-        $recibo = session('recibo_tour365');
+        $recibo = $this->eventos->recibo($this->slug, (int) $id);
         if (! is_array($recibo)) {
             return redirect()->to('/tour-365');
         }
 
-        return view('inscripcion/recibo', ['recibo' => $recibo, 'evento' => Tour365::programa()->nombre]);
+        return view('inscripcion/recibo', ['recibo' => $recibo, 'evento' => $recibo['evento']]);
     }
 
     /**

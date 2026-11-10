@@ -33,7 +33,43 @@ final class ProgramaEvento
         public readonly array $bandasEdad,
         /** @var array<string, array{opciones: array<string, string>, pernocta_extra: bool}> */
         public readonly array $alojamientos = [],
+        /** @var list<DefinicionCampo> */
+        public readonly array $ficha = [],
     ) {
+    }
+
+    public function valorRol(array $entrada, string $rol): string
+    {
+        $clave = $this->claveConRol($rol);
+
+        return $clave === null ? '' : trim((string) ($entrada[$clave] ?? ''));
+    }
+
+    public function claveConRol(string $rol): ?string
+    {
+        foreach ($this->ficha as $campo) {
+            $clave = $this->buscarRol($campo, $rol);
+            if ($clave !== null) {
+                return $clave;
+            }
+        }
+
+        return null;
+    }
+
+    private function buscarRol(DefinicionCampo $campo, string $rol): ?string
+    {
+        if ($campo->rol === $rol) {
+            return $campo->clave;
+        }
+        foreach ($campo->hijos as $hijo) {
+            $clave = $this->buscarRol($hijo, $rol);
+            if ($clave !== null) {
+                return $clave;
+            }
+        }
+
+        return null;
     }
 
     public function curso(string $codigo): ?Curso

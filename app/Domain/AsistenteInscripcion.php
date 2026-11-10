@@ -25,8 +25,8 @@ final class AsistenteInscripcion
         bool $confirmar,
         bool $tieneComprobante,
     ): ResultadoInscripcion {
-        $entrada = $this->normalizar($entrada);
-        $errores = $confirmar ? $this->erroresFicha($programa, $entrada) : [];
+        $entrada = $this->normalizar($programa, $entrada);
+        $errores = $confirmar ? (new ValidadorFicha())->errores($programa->ficha, $entrada) : [];
         $cursos = $this->cursosElegidos($programa, $entrada);
         $errores = array_merge($errores, $this->erroresCursos($programa, $entrada, $cursos, $confirmar));
 
@@ -53,10 +53,10 @@ final class AsistenteInscripcion
 
         $cotizacion = null;
         $lineas = [];
-        if ($selecciones !== [] && isset($programa->bandasEdad[$entrada['edad']])) {
+        if ($selecciones !== [] && $programa->valorRol($entrada, 'edad') !== '') {
             $cotizacion = $this->cotizador->cotizar(
                 $programa->catalogo,
-                BandaEdad::from($entrada['edad']),
+                BandaEdad::from($programa->valorRol($entrada, 'edad')),
                 $selecciones,
             );
             $lineas = $this->congelarLineas($cotizacion);
@@ -64,8 +64,8 @@ final class AsistenteInscripcion
             $errores['cursos'] = 'Elige al menos un curso.';
         }
 
-        if ($confirmar && $cotizacion === null && ! isset($errores['edad']) && $entrada['edad'] === '') {
-            $errores['edad'] = 'Elige la banda de edad.';
+        if ($confirmar && $cotizacion === null && $programa->claveConRol('edad') !== null && $programa->valorRol($entrada, 'edad') === '') {
+            $errores[$programa->claveConRol('edad')] = 'Elige la banda de edad.';
         }
 
         return new ResultadoInscripcion($errores, $entrada, $cotizacion, $notas, $forma, $lineas);
@@ -76,7 +76,7 @@ final class AsistenteInscripcion
      *
      * @return array<string, mixed>
      */
-    private function normalizar(array $entrada): array
+    private function normalizar(ProgramaEvento $programa, array $entrada): array
     {
         $texto = static fn (mixed $valor): string => trim((string) $valor);
         $lista = static function (mixed $valor): array {
@@ -133,7 +133,40 @@ final class AsistenteInscripcion
             'apoyo_montaje' => $texto($entrada['apoyo_montaje'] ?? ''),
             'equipos' => $equipos,
             'forma_pago' => $texto($entrada['forma_pago'] ?? ''),
-        ] + $this->camposDelCurso($entrada, $texto);
+        ] + $this->camposDelCurso($entrada, $texto) + $this->valoresFicha($programa, $entrada, $texto);
+    }
+
+    /**
+     * @param array<string, mixed>     $entrada
+     * @param callable(mixed): string  $texto
+     *
+     * @return array<string, string>
+     */
+    private function valoresFicha(ProgramaEvento $programa, array $entrada, callable $texto): array
+    {
+        $valores = [];
+        foreach ($programa->ficha as $campo) {
+            $this->copiarCampo($campo, $entrada, $valores, $texto);
+        }
+
+        return $valores;
+    }
+
+    /**
+     * @param array<string, mixed>     $entrada
+     * @param array<string, string>    $valores
+     * @param callable(mixed): string  $texto
+     */
+    private function copiarCampo(DefinicionCampo $campo, array $entrada, array &$valores, callable $texto): void
+    {
+        if ($campo->tipo === 'grupo') {
+            foreach ($campo->hijos as $hijo) {
+                $this->copiarCampo($hijo, $entrada, $valores, $texto);
+            }
+
+            return;
+        }
+        $valores[$campo->clave] = $texto($entrada[$campo->clave] ?? '');
     }
 
     /**
@@ -239,7 +272,7 @@ final class AsistenteInscripcion
         if ($confirmar && $cursos === []) {
             $errores['cursos'] = 'Elige al menos un curso.';
         }
-        if ($entrada['edad'] !== '' && ! isset($programa->bandasEdad[$entrada['edad']])) {
+        if ($entrada['edad'] !== '' && ! isset($programa->bandasEdad[$programa->valorRol($entrada, 'edad') !== '' ? $programa->valorRol($entrada, 'edad') : $entrada['edad']])) {
             $errores['edad'] = 'Elige la banda de edad.';
         }
         foreach ($entrada['cursos'] as $codigo) {

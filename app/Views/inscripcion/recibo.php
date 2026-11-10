@@ -18,7 +18,7 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 <body>
 <main>
     <h1><?= esc($evento) ?></h1>
-    <p>Inscripción de <?= esc($recibo['nombre']) ?>, documento <?= esc($recibo['documento']) ?>.</p>
+    <p>Inscripción número <?= esc((string) $recibo['id']) ?> de <?= esc($recibo['nombre']) ?>, documento <?= esc($recibo['documento']) ?>.</p>
     <p>Este resumen quedó congelado el <?= esc($recibo['momento']) ?>. Un cambio posterior del catálogo no lo reescribe.</p>
     <table>
         <?php foreach ($recibo['lineas'] as $linea): ?>

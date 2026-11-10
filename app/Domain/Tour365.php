@@ -104,6 +104,67 @@ final class Tour365
                     'pernocta_extra' => true,
                 ],
             ],
+            ficha: self::ficha(),
         );
+    }
+
+    /**
+     * @return list<DefinicionCampo>
+     */
+    private static function ficha(): array
+    {
+        $documento = [
+            'CC' => 'CC',
+            'TI' => 'TI',
+            'CE' => 'CE',
+            'pasaporte' => 'Pasaporte',
+        ];
+        $centros = [
+            'bogota' => 'Bogotá',
+            'bucaramanga' => 'Bucaramanga',
+            'medellin' => 'Medellín',
+            'cali' => 'Cali',
+            'kpl' => 'KPL',
+            'otro' => 'Otro',
+        ];
+        $seguros = [
+            'assist_card' => 'Assist Card',
+            'eps' => 'EPS',
+            'prepagada' => 'Prepagada',
+            'otro' => 'Otro',
+        ];
+        $parentescos = [
+            'amigo' => 'Amigo/a',
+            'conyuge' => 'Cónyuge',
+            'hermano' => 'Hermano/a',
+            'hijo' => 'Hijo/a',
+            'padre' => 'Padre/Madre',
+            'otro' => 'Otro',
+        ];
+        $edades = [
+            BandaEdad::MenorDe7->value => 'Menor de 7 años',
+            BandaEdad::De7A14->value => 'De 7 a 14 años',
+            BandaEdad::MayorDe14->value => 'Mayor de 14 años',
+        ];
+
+        return [
+            new DefinicionCampo('nombre', 'Nombre completo', 'texto', true, rol: 'nombre', mensaje: 'Escribe el nombre completo.'),
+            new DefinicionCampo('tipo_documento', 'Tipo de documento', 'lista', true, $documento, mensaje: 'Elige el tipo de documento.'),
+            new DefinicionCampo('documento', 'Número de documento', 'texto', true, rol: 'documento', mensaje: 'Escribe el número de documento.'),
+            new DefinicionCampo('edad', 'Edad', 'lista', true, $edades, rol: 'edad', mensaje: 'Elige la banda de edad.'),
+            new DefinicionCampo('telefono', 'Teléfono', 'telefono', true, mensaje: 'Escribe el teléfono.'),
+            new DefinicionCampo('correo', 'Correo', 'email', true, rol: 'correo', mensaje: 'Escribe un correo válido.'),
+            new DefinicionCampo('centro', 'Centro', 'lista', true, $centros, mensaje: 'Elige el centro.'),
+            new DefinicionCampo('centro_otro', 'Si elegiste otro, ¿cuál?', 'texto', true, visibleSi: 'centro=otro', mensaje: 'Escribe cuál centro.'),
+            new DefinicionCampo('seguro', 'Seguro médico', 'lista', true, $seguros, mensaje: 'Elige el seguro médico.'),
+            new DefinicionCampo('datos_seguro', 'Nombre de la EPS o datos del seguro', 'texto', true, mensaje: 'Escribe el nombre de la EPS o los datos del seguro.'),
+            new DefinicionCampo('emergencia', 'Contacto de emergencia', 'grupo', true, hijos: [
+                new DefinicionCampo('emergencia_nombre', 'Nombre', 'texto', true, mensaje: 'Escribe el nombre del contacto de emergencia.'),
+                new DefinicionCampo('emergencia_parentesco', 'Parentesco', 'lista', true, $parentescos, mensaje: 'Elige el parentesco.'),
+                new DefinicionCampo('emergencia_parentesco_otro', 'Si elegiste otro, ¿cuál?', 'texto', true, visibleSi: 'emergencia_parentesco=otro', mensaje: 'Escribe cuál parentesco.'),
+                new DefinicionCampo('emergencia_telefono', 'Teléfono', 'telefono', true, mensaje: 'Escribe el teléfono del contacto de emergencia.'),
+            ]),
+            new DefinicionCampo('consentimiento', 'Autorizo el tratamiento de mis datos para esta inscripción.', 'si_no', true, rol: 'consentimiento', mensaje: 'Hace falta autorizar el tratamiento de datos.'),
+        ];
     }
 }

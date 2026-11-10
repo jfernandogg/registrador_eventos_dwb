@@ -67,6 +67,10 @@ final class ArchivoPrograma
             'parentescos' => $programa->parentescos,
             'bandas_edad' => $programa->bandasEdad,
             'alojamientos' => $programa->alojamientos,
+            'ficha' => array_map(
+                static fn (DefinicionCampo $campo): array => $campo->exportar(),
+                $programa->ficha,
+            ),
         ];
     }
 
@@ -133,7 +137,28 @@ final class ArchivoPrograma
             self::textos($datos['parentescos'] ?? []),
             self::textos($datos['bandas_edad'] ?? []),
             is_array($datos['alojamientos'] ?? null) ? $datos['alojamientos'] : [],
+            self::ficha($datos['ficha'] ?? []),
         );
+    }
+
+    /**
+     * @param mixed $campos
+     *
+     * @return list<DefinicionCampo>
+     */
+    private static function ficha(mixed $campos): array
+    {
+        if (! is_array($campos)) {
+            return [];
+        }
+        $ficha = [];
+        foreach ($campos as $campo) {
+            if (is_array($campo)) {
+                $ficha[] = DefinicionCampo::importar($campo);
+            }
+        }
+
+        return $ficha;
     }
 
     /**
