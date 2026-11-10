@@ -51,6 +51,49 @@ class Admin extends BaseController
         return view('admin/eventos', ['eventos' => $this->eventos->publicados()]);
     }
 
+    public function inscritos(string $slug)
+    {
+        if ($this->eventos->datos($slug) === null) {
+            return redirect()->to('/admin');
+        }
+        $ver = (string) $this->request->getGet('ver');
+        $filas = $this->eventos->inscritos($slug);
+        if ($ver === 'comprobante') {
+            $filas = array_values(array_filter($filas, static fn (array $fila): bool => $fila['comprobante'] !== null));
+        } elseif ($ver === 'alojamiento') {
+            $filas = array_values(array_filter($filas, static fn (array $fila): bool => $fila['alojamiento'] !== []));
+        }
+
+        return view('admin/inscritos', [
+            'slug' => $slug,
+            'nombre' => (string) ($this->eventos->datos($slug)['nombre'] ?? $slug),
+            'filas' => $filas,
+            'ver' => $ver,
+        ]);
+    }
+
+    public function comprobante(string $slug, $id = null)
+    {
+        $ruta = $this->eventos->archivoComprobante($slug, (int) $id);
+        if ($ruta === null) {
+            return $this->response->setStatusCode(404)->setBody('Comprobante no encontrado.');
+        }
+        $nombre = basename($ruta);
+        $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+        $tipo = match ($extension) {
+            'pdf' => 'application/pdf',
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'application/octet-stream',
+        };
+
+        return $this->response
+            ->setHeader('X-Content-Type-Options', 'nosniff')
+            ->setHeader('Content-Disposition', 'inline; filename="' . $nombre . '"')
+            ->setContentType($tipo)
+            ->setBody((string) file_get_contents($ruta));
+    }
+
     public function nuevo()
     {
         return view('admin/parametrizar', [

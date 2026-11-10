@@ -138,6 +138,72 @@ final class RepositorioEventos
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function inscritos(string $slug): array
+    {
+        $eventoId = $this->id($slug);
+        if ($eventoId === null) {
+            return [];
+        }
+
+        $filas = db_connect()->table('inscripciones')
+            ->where('evento_id', $eventoId)
+            ->orderBy('creado_en', 'DESC')
+            ->get()
+            ->getResultArray();
+        $salida = [];
+        foreach ($filas as $fila) {
+            $notas = json_decode((string) $fila['notas_json'], true);
+            $entrada = json_decode((string) $fila['entrada_json'], true);
+            $recibo = json_decode((string) $fila['cotizacion_json'], true);
+            $salida[] = [
+                'id' => (int) $fila['id'],
+                'nombre' => (string) $fila['nombre'],
+                'documento' => (string) $fila['documento'],
+                'correo' => (string) $fila['correo'],
+                'total' => (int) $fila['total'],
+                'estado' => (string) $fila['estado'],
+                'creado_en' => (string) $fila['creado_en'],
+                'forma' => is_array($recibo) ? (string) ($recibo['forma'] ?? '') : '',
+                'comprobante' => self::nombreSeguro((string) ($fila['comprobante'] ?? '')),
+                'alojamiento' => \App\Domain\ResumenInscripcion::alojamiento(
+                    is_array($entrada) ? $entrada : [],
+                    is_array($notas) ? $notas : [],
+                ),
+            ];
+        }
+
+        return $salida;
+    }
+
+    public function archivoComprobante(string $slug, int $id): ?string
+    {
+        $eventoId = $this->id($slug);
+        if ($eventoId === null || $id < 1) {
+            return null;
+        }
+        $fila = db_connect()->table('inscripciones')
+            ->select('comprobante')
+            ->where('id', $id)
+            ->where('evento_id', $eventoId)
+            ->get()
+            ->getRowArray();
+        $nombre = self::nombreSeguro(is_array($fila) ? (string) ($fila['comprobante'] ?? '') : '');
+        if ($nombre === null) {
+            return null;
+        }
+        $ruta = WRITEPATH . 'uploads/comprobantes/' . $nombre;
+
+        return is_file($ruta) ? $ruta : null;
+    }
+
+    private static function nombreSeguro(string $nombre): ?string
+    {
+        return preg_match('/^[A-Za-z0-9_-]+\.(pdf|jpg|jpeg|png)$/', $nombre) === 1 ? $nombre : null;
+    }
+
+    /**
      * @param array<string, mixed> $recibo
      * @param array<string, mixed> $entrada
      *

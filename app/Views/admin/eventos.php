@@ -17,7 +17,8 @@
     <ul>
         <?php foreach ($eventos as $evento): ?>
             <li>
-                <a href="<?= site_url('admin/eventos/' . $evento['slug']) ?>"><?= esc($evento['nombre']) ?></a>
+                <a href="<?= site_url('admin/eventos/' . $evento['slug'] . '/inscritos') ?>"><?= esc($evento['nombre']) ?></a>
+                · <a href="<?= site_url('admin/eventos/' . $evento['slug']) ?>">parametrizar</a>
                 · <a href="<?= site_url('e/' . $evento['slug']) ?>">ver inscripción</a>
             </li>
         <?php endforeach ?>

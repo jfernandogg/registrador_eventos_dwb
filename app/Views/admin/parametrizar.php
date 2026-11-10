@@ -51,7 +51,7 @@ $conteos = [
 <header class="barra">
     <nav>
         <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
-        <?php if (! $nuevo): ?><a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a><?php endif ?>
+        <?php if (! $nuevo): ?><a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a> · <a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a><?php endif ?>
     </nav>
     <button class="boton" type="submit" form="editor">Guardar</button>
 </header>

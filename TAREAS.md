@@ -15,11 +15,11 @@ Estado al 10 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 - [x] La página pública es `/e/{slug}`. `/tour-365` solo redirige. El evento sale de la fila o del JSON de semilla, no de una clase del controlador
 - [x] La ficha se pinta desde el esquema del evento. El navegador exige los campos marcados como obligatorios, sin una lista fija de nombres
 - [x] Diseñador de eventos en `/admin`: cursos, precios, comidas, franjas, alojamiento, pagos, equipos y ficha. Un evento nuevo se abre en `/e/{slug}` sin tocar código
+- [x] Listado de inscritos en `/admin/eventos/{slug}/inscritos`. El comprobante se abre con sesión; la carpeta pública no lo sirve. Las notas del listado son solo de alojamiento
 
 ## Siguiente
 
 - [ ] Login del backoffice: invitación, contraseña y roles. Hoy hay una puerta temporal, no ese sistema
-- [ ] Listado de inscritos, comprobantes y notas de alojamiento
 - [ ] Textos de cuenta, llave Bre-b y enlace Bold por el total de cada persona
 - [ ] Publicar en GoDaddy con el selector de PHP en 8.3
 
