@@ -53,7 +53,7 @@ class Admin extends BaseController
 
     public function nuevo()
     {
-        return view('admin/editor', [
+        return view('admin/parametrizar', [
             'slug' => '',
             'nuevo' => true,
             'post' => EditorEvento::comoFormulario(EditorEvento::vacio('', '')),
@@ -79,7 +79,7 @@ class Admin extends BaseController
                 : 'No se pudo crear el evento.';
         }
 
-        return view('admin/editor', [
+        return view('admin/parametrizar', [
             'slug' => $slug,
             'nuevo' => true,
             'post' => $this->request->getPost() ?? [],
@@ -94,7 +94,7 @@ class Admin extends BaseController
             return redirect()->to('/admin');
         }
 
-        return view('admin/editor', [
+        return view('admin/parametrizar', [
             'slug' => $slug,
             'nuevo' => false,
             'post' => EditorEvento::comoFormulario($datos),
@@ -114,7 +114,7 @@ class Admin extends BaseController
             $resultado['errores'][] = 'No se pudo guardar el evento.';
         }
 
-        return view('admin/editor', [
+        return view('admin/parametrizar', [
             'slug' => $slug,
             'nuevo' => false,
             'post' => $this->request->getPost() ?? [],

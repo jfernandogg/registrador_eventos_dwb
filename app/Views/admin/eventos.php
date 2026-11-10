@@ -5,16 +5,14 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Eventos</title>
-    <style>
-        body { margin: 0; font: 16px/1.45 Georgia, serif; background: #f6f1e8; color: #1c1915; }
-        main { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
-        a { color: inherit; }
-    </style>
+    <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 </head>
 <body>
-<main>
-    <p><a href="<?= site_url('admin/eventos/nuevo') ?>">Nuevo evento</a> · <a href="<?= site_url('admin/salir') ?>">Salir</a></p>
+<main class="contenido" style="grid-template-columns: 1fr; max-width: 720px;">
+    <section class="panel">
+    <p><a class="boton claro" href="<?= site_url('admin/eventos/nuevo') ?>">Nuevo evento</a> · <a href="<?= site_url('admin/salir') ?>">Salir</a></p>
     <h1>Eventos</h1>
     <ul>
         <?php foreach ($eventos as $evento): ?>
