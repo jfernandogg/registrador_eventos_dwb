@@ -22,6 +22,7 @@
             </li>
         <?php endforeach ?>
     </ul>
+    </section>
 </main>
 </body>
 </html>

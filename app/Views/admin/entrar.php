@@ -21,6 +21,7 @@
         </label>
         <button class="boton" type="submit">Entrar</button>
     <?= form_close() ?>
+    </section>
 </main>
 </body>
 </html>
