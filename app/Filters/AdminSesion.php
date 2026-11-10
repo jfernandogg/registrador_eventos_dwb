@@ -11,7 +11,9 @@ class AdminSesion implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         if (! session()->get('admin_id')) {
-            return redirect()->to('/admin/entrar');
+            $vuelve = rawurlencode(uri_string());
+
+            return redirect()->to('/admin/entrar?vuelve=' . $vuelve);
         }
     }
 

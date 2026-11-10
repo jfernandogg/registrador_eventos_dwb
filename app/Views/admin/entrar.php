@@ -15,6 +15,7 @@
     <h1>Backoffice</h1>
         <?php if ($error !== ''): ?><p class="alerta error"><?= esc($error) ?></p><?php endif ?>
         <?= form_open('/admin/entrar') ?>
+        <input type="hidden" name="vuelve" value="<?= esc($vuelve ?? '/admin') ?>">
         <label class="campo">Correo <input name="correo" type="email" required></label>
         <label class="campo">Clave <input name="clave" type="password" required>
             <p class="ayuda">Puerta temporal del backoffice. El sistema de invitación y roles todavía no está.</p>

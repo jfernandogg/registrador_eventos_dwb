@@ -32,11 +32,14 @@ class Admin extends BaseController
             } else {
                 session()->set('admin_id', (int) $fila['id']);
 
-                return redirect()->to('/admin');
+                return redirect()->to($this->destino((string) $this->request->getPost('vuelve')));
             }
         }
 
-        return view('admin/entrar', ['error' => $error]);
+        return view('admin/entrar', [
+            'error' => $error,
+            'vuelve' => $this->destino((string) $this->request->getGet('vuelve')),
+        ]);
     }
 
     public function salir()
@@ -188,6 +191,16 @@ class Admin extends BaseController
             'clave_hash' => password_hash('cambiala', PASSWORD_DEFAULT),
             'creado_en' => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    private function destino(string $vuelve): string
+    {
+        $ruta = ltrim(rawurldecode($vuelve), '/');
+        if (preg_match('#^admin(?:/[A-Za-z0-9_./-]*)?$#', $ruta) !== 1 || str_contains($ruta, '..')) {
+            return '/admin';
+        }
+
+        return '/' . $ruta;
     }
 
     private function slug(string $valor): string

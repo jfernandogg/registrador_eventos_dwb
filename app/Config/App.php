@@ -31,6 +31,26 @@ class App extends BaseConfig
      */
     public array $allowedHostnames = [];
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        $nombre = strtolower((string) preg_replace('/:\d+$/', '', $host));
+        $local = in_array($nombre, ['localhost', '127.0.0.1', '::1'], true)
+            || preg_match('/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/', $nombre) === 1;
+        if ($host === '' || ! $local) {
+            return;
+        }
+
+        $https = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+            || strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+        $this->baseURL = ($https ? 'https' : 'http') . '://' . $host . '/';
+        if (! in_array($nombre, $this->allowedHostnames, true)) {
+            $this->allowedHostnames[] = $nombre;
+        }
+    }
+
     /**
      * --------------------------------------------------------------------------
      * Index File
