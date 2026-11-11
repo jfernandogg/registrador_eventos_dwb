@@ -58,6 +58,10 @@ body {
 
 .marca { font-weight: 650; color: var(--texto); letter-spacing: -0.02em; }
 
+.miga { color: var(--muted); font-size: 0.85rem; user-select: none; }
+
+.barra .activo { font-weight: 650; color: var(--texto); text-decoration: none; }
+
 .contenido {
     display: grid;
     grid-template-columns: 220px minmax(0, 1fr);
@@ -90,6 +94,8 @@ body {
 }
 
 .indice a:hover, .indice a:focus { background: #e7f1ff; color: var(--primario-oscuro); }
+
+.indice .activo-indice { background: var(--primario); color: white; font-weight: 650; }
 
 .indice span { color: var(--muted); font-variant-numeric: tabular-nums; }
 

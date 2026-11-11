@@ -41,4 +41,27 @@
             evento.preventDefault();
         }
     });
+
+    // Scroll-spy en el índice lateral
+    const indice = document.querySelector('.indice');
+    if (indice) {
+        const enlaces = [...indice.querySelectorAll('a[href^=\"#\"]')];
+        const secciones = enlaces.map((a) => document.getElementById(a.getAttribute('href')?.slice(1))).filter(Boolean);
+        const alturaBarra = document.querySelector('.barra')?.offsetHeight || 50;
+
+        function actualizarActivo() {
+            let activo = null;
+            for (let i = secciones.length - 1; i >= 0; i--) {
+                const seccion = secciones[i];
+                if (seccion && seccion.getBoundingClientRect().top <= alturaBarra + 60) {
+                    activo = i;
+                    break;
+                }
+            }
+            enlaces.forEach((enlace, j) => enlace.classList.toggle('activo-indice', j === activo));
+        }
+
+        window.addEventListener('scroll', actualizarActivo, { passive: true });
+        actualizarActivo();
+    }
 })();
