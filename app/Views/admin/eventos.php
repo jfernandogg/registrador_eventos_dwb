@@ -10,20 +10,40 @@
     <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 </head>
 <body>
-<main class="contenido" style="grid-template-columns: 1fr; max-width: 720px;">
+<header class="barra">
+    <nav>
+        <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
+        <a class="activo" href="<?= site_url('admin') ?>">Lista</a>
+        <a href="<?= site_url('admin/salir') ?>">Salir</a>
+    </nav>
+</header>
+<main class="contenido" style="grid-template-columns: 1fr; max-width: 760px;">
+    <p><a class="boton" href="<?= site_url('admin/eventos/nuevo') ?>">Nuevo evento</a></p>
     <section class="panel">
-    <p><a class="boton claro" href="<?= site_url('admin/eventos/nuevo') ?>">Nuevo evento</a> · <a href="<?= site_url('admin/salir') ?>">Salir</a></p>
-    <h1>Eventos</h1>
-    <ul>
-        <?php foreach ($eventos as $evento): ?>
-            <li>
-                <a href="<?= site_url('admin/eventos/' . $evento['slug']) ?>"><?= esc($evento['nombre']) ?></a>
-                · <a href="<?= site_url('admin/eventos/' . $evento['slug'] . '/inscritos') ?>">Inscritos</a>
-                · <a href="<?= site_url('admin/eventos/' . $evento['slug']) ?>">Parametrizar</a>
-                · <a href="<?= site_url('e/' . $evento['slug']) ?>">ver inscripción</a>
-            </li>
-        <?php endforeach ?>
-    </ul>
+        <h1>Eventos</h1>
+        <p class="intro">Cada evento es un punto de inscripción propio. El enlace público es <code>/e/lo-que-elijas</code>.</p>
+        <?php if ($eventos === []): ?>
+            <div class="alerta aviso" style="display: flex; gap: 0.8rem; align-items: flex-start;">
+                <span style="font-size: 1.5rem;">🎪</span>
+                <div>
+                    <strong>No hay eventos todavía.</strong>
+                    <p style="margin: 0.3rem 0 0;">Creá el primero con el botón «Nuevo evento».</p>
+                </div>
+            </div>
+        <?php else: ?>
+            <ul class="lista-eventos-admin">
+                <?php foreach ($eventos as $evento): ?>
+                    <li class="fila-evento">
+                        <a class="nombre-evento" href="<?= site_url('admin/eventos/' . $evento['slug']) ?>"><?= esc($evento['nombre']) ?></a>
+                        <nav class="acciones-evento">
+                            <a href="<?= site_url('admin/eventos/' . $evento['slug'] . '/inscritos') ?>">Inscritos</a>
+                            <a href="<?= site_url('admin/eventos/' . $evento['slug']) ?>">Parametrizar</a>
+                            <a href="<?= site_url('e/' . $evento['slug']) ?>">Ver inscripción</a>
+                        </nav>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        <?php endif ?>
     </section>
 </main>
 </body>

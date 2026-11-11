@@ -35,6 +35,7 @@ final class ProgramaEvento
         public readonly array $alojamientos = [],
         /** @var list<DefinicionCampo> */
         public readonly array $ficha = [],
+        public readonly string $descripcion = '',
     ) {
     }
 

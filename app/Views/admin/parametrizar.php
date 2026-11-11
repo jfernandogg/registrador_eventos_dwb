@@ -51,7 +51,11 @@ $conteos = [
 <header class="barra">
     <nav>
         <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
-        <?php if (! $nuevo): ?><a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a> · <a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a><?php endif ?>
+        <?php if (! $nuevo): ?>
+                            <a href="<?= site_url('e/' . $slug) ?>" target="_blank" rel="noopener">Previsualizar</a>
+                            <a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a>
+                            <a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a>
+                        <?php endif ?>
     </nav>
     <button class="boton" type="submit" form="editor">Guardar</button>
 </header>
@@ -96,6 +100,10 @@ $conteos = [
                         <span class="ayuda">Ya está publicado. Para otro enlace, crea otro evento.</span>
                     </p>
                 <?php endif ?>
+                <label class="campo">Descripción del evento
+                    <textarea name="descripcion" placeholder="Fechas, lugar, breve descripción. Aparece en la portada pública."><?= $texto('descripcion') ?></textarea>
+                    <p class="ayuda">Texto corto para la tarjeta del evento en la portada. Menos de 200 caracteres.</p>
+                </label>
                 <label class="campo">Precio de cada comida
                     <input name="precio_comida" inputmode="numeric" value="<?= $texto('precio_comida') ?>">
                     <p class="ayuda">Pesos enteros, sin puntos. Se suma una vez por comida marcada. Cero si la comida no se cobra aquí. No lleva descuento de edad.</p>
@@ -260,7 +268,7 @@ $conteos = [
                 <tbody id="campos-filas">
                 <?php for ($i = 0; $i < $n(['campo_clave', 'campo_etiqueta']); $i++): ?>
                     <?php $tipo = (string) ($lista('campo_tipo')[$i] ?? 'texto'); ?>
-                    <tr>
+                    <tr class="<?= $celda('campo_padre', $i) !== '' ? 'fila-hijo' : '' ?>">
                         <td data-etiqueta="Clave"><input name="campo_clave[]" value="<?= $celda('campo_clave', $i) ?>" placeholder="centro_otro"></td>
                         <td data-etiqueta="Pregunta"><input name="campo_etiqueta[]" value="<?= $celda('campo_etiqueta', $i) ?>" placeholder="¿Cuál centro?"></td>
                         <td data-etiqueta="Tipo">

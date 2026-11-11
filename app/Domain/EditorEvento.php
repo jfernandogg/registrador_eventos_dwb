@@ -224,6 +224,7 @@ final class EditorEvento
 
         $datos = [
             'nombre' => trim((string) ($post['nombre'] ?? '')),
+            'descripcion' => trim((string) ($post['descripcion'] ?? '')),
             'precio_comida' => max(0, self::entero($post['precio_comida'] ?? 0)),
             'precio_franja' => max(0, self::entero($post['precio_franja'] ?? 0)),
             'cursos' => $cursos,
@@ -264,6 +265,7 @@ final class EditorEvento
     {
         $post = [
             'nombre' => (string) ($datos['nombre'] ?? ''),
+            'descripcion' => (string) ($datos['descripcion'] ?? ''),
             'precio_comida' => (string) ($datos['precio_comida'] ?? 0),
             'precio_franja' => (string) ($datos['precio_franja'] ?? 0),
             'tipos_documento' => self::texto($datos['tipos_documento'] ?? []),

@@ -17,6 +17,7 @@ final class ArchivoPrograma
     {
         return [
             'nombre' => $programa->nombre,
+            'descripcion' => $programa->descripcion,
             'precio_comida' => $programa->catalogo->precioComida,
             'precio_franja' => $programa->catalogo->precioFranjaBus,
             'cursos' => array_map(
@@ -138,6 +139,7 @@ final class ArchivoPrograma
             self::textos($datos['bandas_edad'] ?? []),
             is_array($datos['alojamientos'] ?? null) ? $datos['alojamientos'] : [],
             self::ficha($datos['ficha'] ?? []),
+            (string) ($datos['descripcion'] ?? ''),
         );
     }
 
