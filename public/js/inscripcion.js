@@ -75,6 +75,14 @@
                 bloque.querySelectorAll('input, select').forEach((c) => { c.disabled = !visible; });
             }
         });
+
+        // Aviso de sesiones + comidas: coincidencia de fechas
+        const aviso = document.getElementById('aviso-sesiones-comidas');
+        if (aviso) {
+            const haySesiones = [...form.querySelectorAll('.modo-curso:checked')].some((r) => r.value === 'sesiones');
+            const hayComidas = [...form.querySelectorAll('input[name="comidas[]"]:checked')].length > 0;
+            aviso.classList.toggle('si-oculto', !(haySesiones && hayComidas));
+        }
     }
 
     function mostrarSpinner() {

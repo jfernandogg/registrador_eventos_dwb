@@ -90,6 +90,7 @@ $cursosElegidos = array_values(array_filter(
                 <?php foreach ($comidas as $comida): ?>
                     <label class="check"><input type="checkbox" name="comidas[]" value="<?= esc($comida->id) ?>" <?= $elegido('comidas', $comida->id) ?>> <?= esc($comida->etiqueta) ?></label>
                 <?php endforeach ?>
+                <p class="alerta aviso si-oculto" id="aviso-sesiones-comidas" style="font-size: 0.92rem;">⚠️ Estás eligiendo sesiones individuales y comidas. Revisá que las fechas de las comidas coincidan con los días de tus sesiones. El sistema no valida esto automáticamente.</p>
                 <label>Dieta
                     <select name="dieta">
                         <option value="">Elige</option>
