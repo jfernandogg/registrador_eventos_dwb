@@ -67,7 +67,7 @@ final class EditorEvento
     public static function desdeFormulario(array $post, array $base): array
     {
         $errores = [];
-        $cursos = self::filas($post, ['curso_codigo', 'curso_nombre', 'curso_tarifa'], static function (array $fila) use (&$errores): ?array {
+        $cursos = self::filas($post, ['curso_codigo', 'curso_nombre', 'curso_tarifa', 'curso_inicio', 'curso_fin'], static function (array $fila) use (&$errores): ?array {
             $codigo = self::codigo($fila['curso_codigo']);
             $nombre = trim($fila['curso_nombre']);
             if ($codigo === '' && $nombre === '' && trim($fila['curso_tarifa']) === '') {
@@ -83,7 +83,7 @@ final class EditorEvento
                 $errores[] = 'La tarifa de ' . $nombre . ' no puede ser negativa.';
             }
 
-            return ['codigo' => $codigo, 'nombre' => $nombre, 'tarifa' => max(0, $tarifa)];
+            return ['codigo' => $codigo, 'nombre' => $nombre, 'tarifa' => max(0, $tarifa), 'inicio' => trim($fila['curso_inicio']), 'fin' => trim($fila['curso_fin'])];
         });
         if ($cursos === []) {
             $errores[] = 'El evento necesita al menos un curso.';
@@ -315,13 +315,15 @@ final class EditorEvento
             'bandas_edad' => self::texto($datos['bandas_edad'] ?? []),
             'alojamiento' => [],
         ];
-        foreach (['curso_codigo', 'curso_nombre', 'curso_tarifa', 'comida_id', 'comida_curso', 'comida_etiqueta', 'franja_id', 'franja_curso', 'franja_sentido', 'franja_etiqueta', 'sesion_curso', 'sesion_id', 'sesion_titulo', 'sesion_tipo', 'sesion_inicio', 'sesion_fin', 'sesion_costo', 'pago_codigo', 'pago_etiqueta', 'pago_cobra', 'pago_comprobante', 'equipo_codigo', 'equipo_etiqueta', 'equipo_curso', 'campo_clave', 'campo_etiqueta', 'campo_tipo', 'campo_requerido', 'campo_opciones', 'campo_visible', 'campo_rol', 'campo_mensaje', 'campo_padre'] as $clave) {
+        foreach (['curso_codigo', 'curso_nombre', 'curso_tarifa', 'curso_inicio', 'curso_fin', 'comida_id', 'comida_curso', 'comida_etiqueta', 'franja_id', 'franja_curso', 'franja_sentido', 'franja_etiqueta', 'sesion_curso', 'sesion_id', 'sesion_titulo', 'sesion_tipo', 'sesion_inicio', 'sesion_fin', 'sesion_costo', 'pago_codigo', 'pago_etiqueta', 'pago_cobra', 'pago_comprobante', 'equipo_codigo', 'equipo_etiqueta', 'equipo_curso', 'campo_clave', 'campo_etiqueta', 'campo_tipo', 'campo_requerido', 'campo_opciones', 'campo_visible', 'campo_rol', 'campo_mensaje', 'campo_padre'] as $clave) {
             $post[$clave] = [];
         }
         foreach ($datos['cursos'] ?? [] as $curso) {
             $post['curso_codigo'][] = (string) $curso['codigo'];
             $post['curso_nombre'][] = (string) $curso['nombre'];
             $post['curso_tarifa'][] = (string) $curso['tarifa'];
+            $post['curso_inicio'][] = (string) ($curso['inicio'] ?? '');
+            $post['curso_fin'][] = (string) ($curso['fin'] ?? '');
             foreach ($curso['sesiones'] ?? [] as $s) {
                 $post['sesion_curso'][] = (string) $curso['codigo'];
                 $post['sesion_id'][] = (string) $s['id'];

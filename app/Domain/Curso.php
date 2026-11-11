@@ -13,6 +13,8 @@ final class Curso
         public readonly string $codigo,
         public readonly string $nombre,
         public readonly int $tarifa,
+        public readonly string $inicio = '',
+        public readonly string $fin = '',
         public readonly array $sesiones = [],
     ) {
         if ($this->tarifa < 0) {

@@ -121,13 +121,15 @@ $conteos = [
             <h2>Cursos</h2>
             <p class="intro">Cada curso es una opción del evento. La tarifa es el precio del curso. Si hay un campo con rol edad, el descuento solo toca esta tarifa.</p>
             <table class="tabla">
-                <thead><tr><th>Código</th><th>Nombre</th><th>Tarifa</th><th></th></tr></thead>
+                <thead><tr><th>Código</th><th>Nombre</th><th>Tarifa</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
                 <tbody id="cursos-filas">
-                <?php for ($i = 0; $i < $n(['curso_codigo', 'curso_nombre', 'curso_tarifa']); $i++): ?>
+                <?php for ($i = 0; $i < $n(['curso_codigo', 'curso_nombre', 'curso_tarifa', 'curso_inicio', 'curso_fin']); $i++): ?>
                     <tr>
                         <td data-etiqueta="Código"><input name="curso_codigo[]" value="<?= $celda('curso_codigo', $i) ?>" placeholder="kpl"></td>
                         <td data-etiqueta="Nombre"><input name="curso_nombre[]" value="<?= $celda('curso_nombre', $i) ?>" placeholder="Curso KPL"></td>
                         <td data-etiqueta="Tarifa"><input name="curso_tarifa[]" inputmode="numeric" value="<?= $celda('curso_tarifa', $i) ?>" placeholder="150000"></td>
+                        <td data-etiqueta="Inicio"><input type="datetime-local" name="curso_inicio[]" value="<?= $celda('curso_inicio', $i) ?>"></td>
+                        <td data-etiqueta="Fin"><input type="datetime-local" name="curso_fin[]" value="<?= $celda('curso_fin', $i) ?>"></td>
                         <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
                     </tr>
                 <?php endfor ?>
@@ -206,15 +208,15 @@ $conteos = [
                                 <option value="libre" <?= $tipo === 'libre' ? 'selected' : '' ?>>Libre</option>
                             </select>
                         </td>
-                        <td data-etiqueta="Inicio"><input name="sesion_inicio[]" value="<?= $celda('sesion_inicio', $i) ?>" placeholder="2026-11-28T09:00"></td>
-                        <td data-etiqueta="Fin"><input name="sesion_fin[]" value="<?= $celda('sesion_fin', $i) ?>" placeholder="2026-11-28T11:30"></td>
+                        <td data-etiqueta="Inicio"><input type="datetime-local" name="sesion_inicio[]" value="<?= $celda('sesion_inicio', $i) ?>" placeholder="2026-11-28T09:00"></td>
+                        <td data-etiqueta="Fin"><input type="datetime-local" name="sesion_fin[]" value="<?= $celda('sesion_fin', $i) ?>" placeholder="2026-11-28T11:30"></td>
                         <td data-etiqueta="Costo"><input name="sesion_costo[]" inputmode="numeric" value="<?= $celda('sesion_costo', $i) ?>" placeholder="50000"></td>
                         <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
                     </tr>
                 <?php endfor ?>
                 </tbody>
             </table>
-            <p class="ayuda">El curso es el código del curso que ya creaste. El id es interno y no se repite dentro del mismo curso. Inicio y fin en formato ISO (AAAA-MM-DDTHH:MM). Costo 0 = gratuita. Si el curso tiene sesiones, el participante puede elegir curso completo o sesiones sueltas.</p>
+            <p class="ayuda">El curso es el código del curso que ya creaste. El id es interno y no se repite dentro del mismo curso. Usa los selectores de fecha y hora para inicio y fin. Costo 0 = gratuita. Si el curso tiene sesiones, el participante puede elegir curso completo o sesiones sueltas.</p>
             <button type="button" class="boton claro" data-agregar="sesiones-filas">Agregar sesión</button>
         </section>
 
@@ -366,6 +368,8 @@ $conteos = [
     <td data-etiqueta="Código"><input name="curso_codigo[]" placeholder="kpl"></td>
     <td data-etiqueta="Nombre"><input name="curso_nombre[]" placeholder="Curso KPL"></td>
     <td data-etiqueta="Tarifa"><input name="curso_tarifa[]" inputmode="numeric" placeholder="150000"></td>
+    <td data-etiqueta="Inicio"><input type="datetime-local" name="curso_inicio[]"></td>
+    <td data-etiqueta="Fin"><input type="datetime-local" name="curso_fin[]"></td>
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>
 <template id="tpl-comidas-filas"><tr>
@@ -386,8 +390,8 @@ $conteos = [
     <td data-etiqueta="Id"><input name="sesion_id[]" placeholder="kpl_s1"></td>
     <td data-etiqueta="Título"><input name="sesion_titulo[]" placeholder="Enseñanza de Lama Ole"></td>
     <td data-etiqueta="Tipo"><select name="sesion_tipo[]"><option value=""></option><option value="ensenanza">Enseñanza</option><option value="meditacion">Meditación</option><option value="trabajo">Trabajo</option><option value="libre">Libre</option></select></td>
-    <td data-etiqueta="Inicio"><input name="sesion_inicio[]" placeholder="2026-11-28T09:00"></td>
-    <td data-etiqueta="Fin"><input name="sesion_fin[]" placeholder="2026-11-28T11:30"></td>
+    <td data-etiqueta="Inicio"><input type="datetime-local" name="sesion_inicio[]" placeholder="2026-11-28T09:00"></td>
+    <td data-etiqueta="Fin"><input type="datetime-local" name="sesion_fin[]" placeholder="2026-11-28T11:30"></td>
     <td data-etiqueta="Costo"><input name="sesion_costo[]" inputmode="numeric" placeholder="50000"></td>
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>

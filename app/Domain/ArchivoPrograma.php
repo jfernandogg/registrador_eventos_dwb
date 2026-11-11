@@ -25,6 +25,8 @@ final class ArchivoPrograma
                     'codigo' => $curso->codigo,
                     'nombre' => $curso->nombre,
                     'tarifa' => $curso->tarifa,
+                    'inicio' => $curso->inicio,
+                    'fin' => $curso->fin,
                     'sesiones' => array_map(
                         static fn (Sesion $s): array => [
                             'id' => $s->id,
@@ -106,7 +108,7 @@ final class ArchivoPrograma
                     (int) ($s['costo'] ?? 0),
                 );
             }
-            $objeto = new Curso((string) $curso['codigo'], (string) $curso['nombre'], (int) $curso['tarifa'], $sesiones);
+            $objeto = new Curso((string) $curso['codigo'], (string) $curso['nombre'], (int) $curso['tarifa'], (string) ($curso['inicio'] ?? ''), (string) ($curso['fin'] ?? ''), $sesiones);
             $cursos[$objeto->codigo] = $objeto;
         }
 
