@@ -114,6 +114,9 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
                     <option value="">Ninguno</option>
                 </select>
             </label>
+            <label class="check" style="margin-top: 0.5rem;">
+                <input type="checkbox" id="inc-comprobantes"> Incluir comprobantes (genera un ZIP con el CSV y los archivos de soporte)
+            </label>
             <p style="display: flex; gap: 0.5rem; margin-top: 1rem;">
                 <button class="boton-primario" id="btn-descargar">Descargar</button>
                 <button class="boton claro" id="btn-cerrar-modal">Cancelar</button>
@@ -138,7 +141,8 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
         document.addEventListener('keydown', function(e){ if (e.key === 'Escape') modal.classList.add('si-oculto'); });
 
         document.getElementById('btn-descargar').addEventListener('click', function(){
-            window.location = baseUrl + '?sep=' + encodeURIComponent(sep.value) + '&enc=' + encodeURIComponent(enc.value);
+            var comp = document.getElementById('inc-comprobantes').checked ? '&comprobantes=1' : '';
+            window.location = baseUrl + '?sep=' + encodeURIComponent(sep.value) + '&enc=' + encodeURIComponent(enc.value) + comp;
         });
     })();
     </script>

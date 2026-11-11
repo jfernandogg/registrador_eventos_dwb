@@ -241,6 +241,7 @@ class Admin extends BaseController
 
         $separador = (string) $this->request->getGet('sep');
         $encerrador = (string) $this->request->getGet('enc');
+        $conComprobantes = $this->request->getGet('comprobantes') === '1';
 
         if (! in_array($separador, [',', ';', "\t"], true)) {
             $separador = ',';
@@ -251,18 +252,71 @@ class Admin extends BaseController
 
         $filas = $this->eventos->exportarDatos($slug);
         $nombreEvento = (string) ($this->eventos->datos($slug)['nombre'] ?? $slug);
-        $archivo = preg_replace('/[^a-z0-9]+/', '-', strtolower($nombreEvento)) . '.csv';
-
+        $base = preg_replace('/[^a-z0-9]+/', '-', strtolower($nombreEvento));
         $csv = $this->aCsv($filas, $separador, $encerrador);
 
-        // Bypass debug toolbar injection
+        if ($conComprobantes && class_exists('ZipArchive')) {
+            $zipPath = $this->construirZip($slug, $base . '.csv', $csv);
+            if ($zipPath === null) {
+                return redirect()->to('/admin/eventos/' . $slug . '/inscritos');
+            }
+            $this->servirDescarga($zipPath, $base . '.zip', 'application/zip');
+        } else {
+            $this->servirDescarga(null, $base . '.csv', 'text/csv; charset=utf-8', $csv);
+        }
+
+        exit;
+    }
+
+    /**
+     * @return string|null Path del ZIP temporal, o null si falló
+     */
+    private function construirZip(string $slug, string $csvNombre, string $csvContenido): ?string
+    {
+        $zipPath = tempnam(sys_get_temp_dir(), 'export-') . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return null;
+        }
+
+        $zip->addFromString($csvNombre, $csvContenido);
+
+        $inscritos = $this->eventos->inscritos($slug);
+        $comprobantesDir = WRITEPATH . 'uploads/comprobantes/';
+        foreach ($inscritos as $fila) {
+            $nombre = (string) ($fila['comprobante'] ?? '');
+            if ($nombre === '') {
+                continue;
+            }
+            $ruta = $comprobantesDir . $nombre;
+            if (is_file($ruta)) {
+                $zip->addFile($ruta, 'comprobantes/' . $nombre);
+            }
+        }
+
+        $zip->close();
+
+        return $zipPath;
+    }
+
+    /**
+     * @param string|null $rutaArchivo Ruta del ZIP temporal (null si es contenido en memoria)
+     */
+    private function servirDescarga(?string $rutaArchivo, string $filename, string $contentType, ?string $contenido = null): void
+    {
         if (ob_get_level() > 0) {
             ob_end_clean();
         }
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $archivo . '"');
-        echo $csv;
-        exit;
+        header('Content-Type: ' . $contentType);
+        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+        header('Content-Length: ' . ($rutaArchivo !== null ? (string) filesize($rutaArchivo) : (string) strlen((string) $contenido)));
+
+        if ($rutaArchivo !== null) {
+            readfile($rutaArchivo);
+            unlink($rutaArchivo);
+        } else {
+            echo $contenido;
+        }
     }
 
     /**
