@@ -176,7 +176,12 @@ final class EditorEvento
                 if (! is_array($bloque)) {
                     continue;
                 }
-                $opciones = self::mapa((string) ($bloque['opciones'] ?? ''));
+                $opcionesRaw = $bloque['opciones'] ?? null;
+                if (is_array($opcionesRaw) && isset($opcionesRaw['codigo']) && is_array($opcionesRaw['codigo'])) {
+                    $opciones = self::pares($opcionesRaw['codigo'], $opcionesRaw['etiqueta'] ?? []);
+                } else {
+                    $opciones = self::mapa((string) $opcionesRaw);
+                }
                 if ($opciones === []) {
                     continue;
                 }
@@ -299,8 +304,12 @@ final class EditorEvento
             $post['equipo_curso'][] = (string) ($equipo['solo_curso'] ?? '');
         }
         foreach ($datos['alojamientos'] ?? [] as $codigo => $alojamiento) {
+            $opciones = $alojamiento['opciones'] ?? [];
             $post['alojamiento'][$codigo] = [
-                'opciones' => self::texto($alojamiento['opciones'] ?? []),
+                'opciones' => [
+                    'codigo' => array_keys($opciones),
+                    'etiqueta' => array_values($opciones),
+                ],
                 'pernocta' => ! empty($alojamiento['pernocta_extra']) ? '1' : '0',
             ];
         }
@@ -422,6 +431,26 @@ final class EditorEvento
             [$codigo, $etiqueta] = explode('=', $linea, 2);
             $codigo = trim($codigo);
             $etiqueta = trim($etiqueta);
+            if ($codigo !== '' && $etiqueta !== '') {
+                $mapa[$codigo] = $etiqueta;
+            }
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * @param list<string> $codigos
+     * @param list<string> $etiquetas
+     * @return array<string, string>
+     */
+    private static function pares(array $codigos, array $etiquetas): array
+    {
+        $mapa = [];
+        $n = max(count($codigos), count($etiquetas));
+        for ($i = 0; $i < $n; $i++) {
+            $codigo = trim((string) ($codigos[$i] ?? ''));
+            $etiqueta = trim((string) ($etiquetas[$i] ?? ''));
             if ($codigo !== '' && $etiqueta !== '') {
                 $mapa[$codigo] = $etiqueta;
             }

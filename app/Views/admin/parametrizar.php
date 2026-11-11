@@ -177,16 +177,32 @@ $conteos = [
 
         <section class="panel" id="alojamiento">
             <h2>Alojamiento</h2>
-            <p class="intro">Se pregunta y queda en la nota de logística. No entra al total: se paga en el sitio.</p>
+            <p class="intro">Se pregunta y queda en la nota de logística. No entra al total: se paga en el sitio. Agregá las opciones que puede elegir el participante.</p>
             <?php $alojamiento = is_array($post['alojamiento'] ?? null) ? $post['alojamiento'] : []; ?>
             <?php $hayCurso = false; ?>
             <?php foreach ($lista('curso_codigo') as $codigoCurso): ?>
                 <?php if ($codigoCurso === '') { continue; } $hayCurso = true; ?>
                 <?php $bloque = is_array($alojamiento[$codigoCurso] ?? null) ? $alojamiento[$codigoCurso] : []; ?>
-                <label class="campo"><?= esc((string) $codigoCurso) ?>
-                    <textarea name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones]" placeholder="no=No duermo en el curso&#10;carpa=Carpa"><?= esc((string) ($bloque['opciones'] ?? '')) ?></textarea>
-                    <p class="ayuda">Una opción por línea: <code>codigo=etiqueta</code>. Vacío significa que este curso no pregunta alojamiento.</p>
-                </label>
+                <?php $codigosAloj = is_array($bloque['opciones']['codigo'] ?? null) ? $bloque['opciones']['codigo'] : []; ?>
+                <?php $etiquetasAloj = is_array($bloque['opciones']['etiqueta'] ?? null) ? $bloque['opciones']['etiqueta'] : []; ?>
+                <div style="margin-bottom: 1.2rem;">
+                    <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Curso <?= esc(strtoupper((string) $codigoCurso)) ?></h3>
+                    <table class="tabla">
+                        <thead><tr><th>Código</th><th>Etiqueta</th><th></th></tr></thead>
+                        <tbody id="aloj-<?= esc((string) $codigoCurso) ?>-filas">
+                        <?php $nAloj = max(1, count($codigosAloj)); ?>
+                        <?php for ($i = 0; $i < $nAloj; $i++): ?>
+                            <tr>
+                                <td data-etiqueta="Código"><input name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones][codigo][]" value="<?= esc((string) ($codigosAloj[$i] ?? '')) ?>" placeholder="no"></td>
+                                <td data-etiqueta="Etiqueta"><input name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones][etiqueta][]" value="<?= esc((string) ($etiquetasAloj[$i] ?? '')) ?>" placeholder="No duermo en el curso"></td>
+                                <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
+                            </tr>
+                        <?php endfor ?>
+                        </tbody>
+                    </table>
+                    <p class="ayuda">Vacío significa que este curso no pregunta alojamiento. Agregá tantas opciones como necesites.</p>
+                    <button type="button" class="boton claro" data-agregar="aloj-<?= esc((string) $codigoCurso) ?>-filas">Agregar opción</button>
+                </div>
                 <label class="campo">¿Preguntar pernocta fuera de las fechas?
                     <?= $siNo('alojamiento[' . $codigoCurso . '][pernocta]', (string) ($bloque['pernocta'] ?? '0')) ?>
                     <p class="ayuda">Si respondes sí, el formulario pregunta también si apoya montaje o desmontaje. Ese costo tampoco entra aquí.</p>
@@ -347,6 +363,13 @@ $conteos = [
     <input type="hidden" name="campo_mensaje[]" value="">
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>
+<?php foreach ($lista('curso_codigo') as $codigoCurso): ?><?php if ($codigoCurso === '') { continue; } ?>
+<template id="tpl-aloj-<?= esc($codigoCurso) ?>-filas"><tr>
+    <td data-etiqueta="Código"><input name="alojamiento[<?= esc($codigoCurso) ?>][opciones][codigo][]" placeholder="no"></td>
+    <td data-etiqueta="Etiqueta"><input name="alojamiento[<?= esc($codigoCurso) ?>][opciones][etiqueta][]" placeholder="No duermo en el curso"></td>
+    <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
+</tr></template>
+<?php endforeach ?>
 <script src="<?= base_url('js/editor.js') ?>"></script>
 </body>
 </html>
