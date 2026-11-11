@@ -174,6 +174,21 @@ $cursosElegidos = array_values(array_filter(
                 </div>
             <?php endif ?>
 
+            <?php $sesionesCurso = $programa->sesionesDe($curso->codigo); ?>
+            <?php if ($sesionesCurso !== []): ?>
+                <div data-sesiones="<?= esc($curso->codigo) ?>">
+                <p style="margin-top: 0.5rem;">Modalidad del curso: elegí el curso completo o solo las sesiones que quieras. Las sesiones sueltas se cobran aparte; el curso completo tiene la tarifa de arriba.</p>
+                <label class="check"><input type="radio" name="modo_curso[<?= esc($curso->codigo) ?>]" value="completo" class="modo-curso" data-curso="<?= esc($curso->codigo) ?>" checked> Curso completo (<?= $pesos($curso->tarifa) ?>)</label>
+                <label class="check"><input type="radio" name="modo_curso[<?= esc($curso->codigo) ?>]" value="sesiones" class="modo-curso" data-curso="<?= esc($curso->codigo) ?>"> Elegir sesiones individuales</label>
+                <div class="bloque-sesiones si-oculto" data-curso-sesiones="<?= esc($curso->codigo) ?>">
+                    <?php foreach ($sesionesCurso as $sesion): ?>
+                        <?php $marcada = in_array($sesion->id, (array) ($entrada['sesiones_elegidas'][$curso->codigo] ?? []), true); ?>
+                        <label class="check"><input type="checkbox" name="sesiones_elegidas[<?= esc($curso->codigo) ?>][]" value="<?= esc($sesion->id) ?>" class="sesion-check" data-curso="<?= esc($curso->codigo) ?>" data-costo="<?= $sesion->costo ?>" <?= $marcada ? 'checked' : '' ?>> <?= esc($sesion->titulo) ?> (<?= esc($sesion->tipo) ?>, <?= esc($sesion->inicio) ?>)<?= $sesion->costo > 0 ? ' — $ ' . $pesos($sesion->costo) : ' (gratis)' ?></label>
+                    <?php endforeach ?>
+                </div>
+                </div>
+            <?php endif ?>
+
             <p>Equipos, opcional, máximo dos. No cambian el precio.</p>
             <?php foreach ($programa->equiposDe($curso->codigo) as $equipo): ?>
                 <?php $marcados = $entrada['equipos'][$curso->codigo] ?? []; ?>

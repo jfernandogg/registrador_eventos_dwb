@@ -382,7 +382,19 @@ final class AsistenteInscripcion
                 $notas[] = $programa->curso($codigo)?->nombre . ', equipos: ' . implode(', ', $equipos) . '. No cambian el precio.';
             }
 
-            $selecciones[] = new SeleccionCurso($codigo, $comidasPorCurso[$codigo], $franjasPorCurso[$codigo]);
+            $costosSesiones = [];
+            $modoCurso = (string) ($entrada['modo_curso'][$codigo] ?? 'completo');
+            $sesionesElegidas = (array) ($entrada['sesiones_elegidas'][$codigo] ?? []);
+            if ($modoCurso === 'sesiones' && $sesionesElegidas !== []) {
+                foreach ($programa->sesionesDe($codigo) as $sesion) {
+                    if (in_array($sesion->id, $sesionesElegidas, true)) {
+                        $costosSesiones[] = $sesion->costo;
+                        $notas[] = $curso?->nombre . ', sesión: ' . $sesion->titulo . ' ($ ' . number_format($sesion->costo, 0, ',', '.') . ').';
+                    }
+                }
+            }
+
+            $selecciones[] = new SeleccionCurso($codigo, $comidasPorCurso[$codigo], $franjasPorCurso[$codigo], $costosSesiones);
         }
 
         return [$selecciones, $notas, $errores];

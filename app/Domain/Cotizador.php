@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace App\Domain;
 
-/**
- * Calcula el total en línea. El descuento de edad solo toca la tarifa del curso.
- * Comida, transporte y lo que se paga en sitio no entran aquí.
- */
 final class Cotizador
 {
     /**
@@ -28,7 +24,17 @@ final class Cotizador
             }
 
             $curso = $evento->curso($seleccion->codigoCurso);
-            $lineas[] = new LineaCotizacion($curso->nombre, $curso->tarifa, 1, TipoLinea::Curso);
+            $tarifaCurso = $curso->tarifa;
+
+            if ($seleccion->enModoSesiones()) {
+                $tarifaSesiones = $seleccion->totalSesiones();
+                if ($tarifaSesiones > 0) {
+                    $lineas[] = new LineaCotizacion($curso->nombre . ' (sesiones)', $tarifaSesiones, 1, TipoLinea::Curso);
+                }
+                $tarifaCurso = $tarifaSesiones;
+            } else {
+                $lineas[] = new LineaCotizacion($curso->nombre, $tarifaCurso, 1, TipoLinea::Curso);
+            }
 
             if ($seleccion->comidas > 0) {
                 $lineas[] = new LineaCotizacion(
@@ -48,7 +54,7 @@ final class Cotizador
                 );
             }
 
-            $descuento = $this->descuentoCurso($edad, $curso->tarifa);
+            $descuento = $this->descuentoCurso($edad, $tarifaCurso);
             if ($descuento > 0) {
                 $ajustes[] = new LineaCotizacion(
                     $this->motivo($edad),

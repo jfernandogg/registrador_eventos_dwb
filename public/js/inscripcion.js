@@ -64,6 +64,17 @@
             select.disabled = !mostrarDieta;
             select.closest('label')?.classList.toggle('si-oculto', !mostrarDieta);
         });
+
+        // Toggle sesiones: mostrar checkboxes solo si modo "sesiones"
+        form.querySelectorAll('.modo-curso:checked').forEach((radio) => {
+            const codigo = radio.dataset.curso;
+            const bloque = document.querySelector(`[data-curso-sesiones="${codigo}"]`);
+            if (bloque) {
+                const visible = radio.value === 'sesiones';
+                bloque.classList.toggle('si-oculto', !visible);
+                bloque.querySelectorAll('input, select').forEach((c) => { c.disabled = !visible; });
+            }
+        });
     }
 
     function mostrarSpinner() {
