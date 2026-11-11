@@ -6,6 +6,7 @@
 $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 $enlace = static fn (string $filtro): string => site_url('admin/eventos/' . $slug . '/inscritos') . ($filtro === '' ? '' : '?ver=' . $filtro);
 $detalleUrl = static fn (int $id): string => site_url('admin/eventos/' . $slug . '/inscritos/' . $id) . ($ver !== '' ? '?ver=' . $ver : '');
+$exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
 ?>
 <!doctype html>
 <html lang="es">
@@ -33,6 +34,7 @@ $detalleUrl = static fn (int $id): string => site_url('admin/eventos/' . $slug .
             <a class="<?= $ver === '' ? 'activo' : '' ?>" href="<?= $enlace('') ?>">Todas</a>
             <a class="<?= $ver === 'comprobante' ? 'activo' : '' ?>" href="<?= $enlace('comprobante') ?>">Con comprobante</a>
             <a class="<?= $ver === 'alojamiento' ? 'activo' : '' ?>" href="<?= $enlace('alojamiento') ?>">Con nota de alojamiento</a>
+            <button class="boton claro" id="btn-exportar" style="margin-left: 0.6rem;">Exportar CSV</button>
         </p>
         <?php if ($filas === []): ?>
             <div class="alerta aviso" style="display: flex; gap: 0.8rem; align-items: flex-start;">
@@ -93,9 +95,52 @@ $detalleUrl = static fn (int $id): string => site_url('admin/eventos/' . $slug .
             </table>
         <?php endif ?>
     </section>
-</main>
-<script>
-document.querySelectorAll('.fila-clicable').forEach(function(fila){fila.addEventListener('click',function(e){if(e.target.tagName==='A')return;window.location=fila.dataset.href})});
-</script>
-</body>
-</html>
+    </main>
+
+    <div class="modal-fondo si-oculto" id="modal-exportar">
+        <div class="modal-caja">
+            <h2>Exportar a CSV</h2>
+            <label class="campo">Separador de campo
+                <select id="sep-csv">
+                    <option value=",">Coma (,)</option>
+                    <option value=";">Punto y coma (;)</option>
+                    <option value="\t">Tabulacion</option>
+                </select>
+            </label>
+            <label class="campo">Encerrador de valores
+                <select id="enc-csv">
+                    <option value="&quot;">Comillas dobles ("...")</option>
+                    <option value="'">Comillas simples ('...')</option>
+                    <option value="">Ninguno</option>
+                </select>
+            </label>
+            <p style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                <button class="boton-primario" id="btn-descargar">Descargar</button>
+                <button class="boton claro" id="btn-cerrar-modal">Cancelar</button>
+            </p>
+        </div>
+    </div>
+
+    <script>
+    document.querySelectorAll('.fila-clicable').forEach(function(fila){fila.addEventListener('click',function(e){if(e.target.tagName==='A')return;window.location=fila.dataset.href})});
+
+    (function(){
+        var modal = document.getElementById('modal-exportar');
+        var btnAbrir = document.getElementById('btn-exportar');
+        var btnCerrar = document.getElementById('btn-cerrar-modal');
+        var sep = document.getElementById('sep-csv');
+        var enc = document.getElementById('enc-csv');
+        var baseUrl = <?= json_encode($exportarUrl) ?>;
+
+        btnAbrir.addEventListener('click', function(){ modal.classList.remove('si-oculto'); });
+        btnCerrar.addEventListener('click', function(){ modal.classList.add('si-oculto'); });
+        modal.addEventListener('click', function(e){ if (e.target === modal) modal.classList.add('si-oculto'); });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') modal.classList.add('si-oculto'); });
+
+        document.getElementById('btn-descargar').addEventListener('click', function(){
+            window.location = baseUrl + '?sep=' + encodeURIComponent(sep.value) + '&enc=' + encodeURIComponent(enc.value);
+        });
+    })();
+    </script>
+    </body>
+    </html>

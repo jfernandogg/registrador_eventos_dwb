@@ -19,6 +19,7 @@ $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->post('eventos', 'Admin::crear');
     $routes->get('eventos/(:segment)/inscritos/(:num)', 'Admin::detalleInscrito/$1/$2');
     $routes->get('eventos/(:segment)/inscritos', 'Admin::inscritos/$1');
+    $routes->get('eventos/(:segment)/exportar', 'Admin::exportar/$1');
     $routes->get('eventos/(:segment)/comprobantes/(:num)', 'Admin::comprobante/$1/$2');
     $routes->get('eventos/(:segment)', 'Admin::editar/$1');
     $routes->post('eventos/(:segment)', 'Admin::guardar/$1');

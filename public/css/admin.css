@@ -220,6 +220,10 @@ code { font-size: 0.9em; background: #f1f3f5; padding: 0.05rem 0.3rem; border-ra
 .filtros a { color: var(--primario); }
 .filtros .activo { font-weight: 650; text-decoration: none; color: var(--texto); }
 
+/* Modal de exportación */
+.modal-fondo { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-caja { background: var(--card); border: 1px solid var(--linea); border-radius: 6px; padding: 1.5rem; min-width: 320px; max-width: 420px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
 /* Lista de eventos en admin */
 .lista-eventos-admin { list-style: none; padding: 0; display: grid; gap: 0.4rem; }
 .fila-evento { display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 0.5rem 0; border-bottom: 1px solid var(--linea); }

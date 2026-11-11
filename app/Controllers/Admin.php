@@ -232,4 +232,68 @@ class Admin extends BaseController
 
         return trim($slug, '-');
     }
+
+    public function exportar(string $slug)
+    {
+        if ($this->eventos->datos($slug) === null) {
+            return redirect()->to('/admin');
+        }
+
+        $separador = (string) $this->request->getGet('sep');
+        $encerrador = (string) $this->request->getGet('enc');
+
+        if (! in_array($separador, [',', ';', "\t"], true)) {
+            $separador = ',';
+        }
+        if (! in_array($encerrador, ['"', "'", ''], true)) {
+            $encerrador = '"';
+        }
+
+        $filas = $this->eventos->exportarDatos($slug);
+        $nombreEvento = (string) ($this->eventos->datos($slug)['nombre'] ?? $slug);
+        $archivo = preg_replace('/[^a-z0-9]+/', '-', strtolower($nombreEvento)) . '.csv';
+
+        $csv = $this->aCsv($filas, $separador, $encerrador);
+
+        // Bypass debug toolbar injection
+        if (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $archivo . '"');
+        echo $csv;
+        exit;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $filas
+     */
+    private function aCsv(array $filas, string $sep, string $enc): string
+    {
+        if ($filas === []) {
+            return '';
+        }
+
+        $salida = fopen('php://temp', 'r+');
+        if ($salida === false) {
+            return '';
+        }
+
+        // BOM for Excel UTF-8 compatibility
+        fwrite($salida, "\xEF\xBB\xBF");
+
+        // Header
+        fputcsv($salida, array_keys($filas[0]), $sep, $enc);
+
+        // Rows
+        foreach ($filas as $fila) {
+            fputcsv($salida, array_map(static fn ($v) => is_scalar($v) ? (string) $v : '', $fila), $sep, $enc);
+        }
+
+        rewind($salida);
+        $csv = stream_get_contents($salida);
+        fclose($salida);
+
+        return $csv !== false ? $csv : '';
+    }
 }

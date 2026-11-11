@@ -398,6 +398,47 @@ final class RepositorioEventos
         return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug) === 1;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function exportarDatos(string $slug): array
+    {
+        $eventoId = $this->id($slug);
+        if ($eventoId === null) {
+            return [];
+        }
+
+        $filas = db_connect()->table('inscripciones')
+            ->where('evento_id', $eventoId)
+            ->orderBy('creado_en', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        return array_map(static function (array $fila): array {
+            $entrada = json_decode((string) $fila['entrada_json'], true) ?: [];
+            $notas = json_decode((string) $fila['notas_json'], true) ?: [];
+            $recibo = json_decode((string) $fila['cotizacion_json'], true) ?: [];
+
+            return [
+                'ID' => (int) $fila['id'],
+                'Nombre' => (string) $fila['nombre'],
+                'Documento' => (string) $fila['documento'],
+                'Correo' => (string) $fila['correo'],
+                'Teléfono' => (string) ($entrada['telefono'] ?? ''),
+                'Edad' => (string) ($entrada['edad'] ?? ''),
+                'Centro' => (string) ($entrada['centro'] ?? ''),
+                'Seguro' => (string) ($entrada['seguro'] ?? ''),
+                'Cursos' => implode(', ', (array) ($entrada['cursos'] ?? [])),
+                'Forma de pago' => is_array($recibo) ? (string) ($recibo['forma'] ?? '') : '',
+                'Total' => (int) $fila['total'],
+                'Estado' => (string) $fila['estado'],
+                'Comprobante' => self::nombreSeguro((string) ($fila['comprobante'] ?? '')),
+                'Notas' => implode(' | ', is_array($notas) ? $notas : []),
+                'Creado' => (string) $fila['creado_en'],
+            ];
+        }, $filas);
+    }
+
     private function enPruebas(): bool
     {
         return defined('ENVIRONMENT') && ENVIRONMENT === 'testing';
