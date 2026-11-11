@@ -427,6 +427,51 @@ $conteos = [
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>
 <?php endforeach ?>
+<script>
+(function(){
+    var cursos = <?= json_encode((function() use ($lista): array {
+        $mapa = [];
+        $codigos = $lista('curso_codigo');
+        $inicios = $lista('curso_inicio');
+        $fines = $lista('curso_fin');
+        foreach ($codigos as $i => $codigo) {
+            if ($codigo === '') { continue; }
+            $mapa[$codigo] = [
+                'inicio' => (string) ($inicios[$i] ?? ''),
+                'fin' => (string) ($fines[$i] ?? ''),
+            ];
+        }
+        return $mapa;
+    })()) ?>;
+
+    function constrenirSesion(fila) {
+        var curso = fila.querySelector('[name="sesion_curso[]"]');
+        var inicio = fila.querySelector('[name="sesion_inicio[]"]');
+        var fin = fila.querySelector('[name="sesion_fin[]"]');
+        if (!curso || !inicio || !fin) return;
+
+        var datos = cursos[curso.value.trim()];
+        if (datos) {
+            if (datos.inicio) inicio.min = datos.inicio;
+            else inicio.removeAttribute('min');
+            if (datos.fin) fin.max = datos.fin;
+            else fin.removeAttribute('max');
+        } else {
+            inicio.removeAttribute('min');
+            fin.removeAttribute('max');
+        }
+    }
+
+    document.getElementById('sesiones-filas').addEventListener('change', function(e){
+        if (e.target.name === 'sesion_curso[]') {
+            constrenirSesion(e.target.closest('tr'));
+        }
+    });
+
+    // Apply to existing rows on load
+    document.querySelectorAll('#sesiones-filas tr').forEach(constrenirSesion);
+})();
+</script>
 <script src="<?= base_url('js/editor.js') ?>"></script>
 </body>
 </html>
