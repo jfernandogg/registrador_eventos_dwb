@@ -6,21 +6,23 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Recibo <?= esc($evento) ?></title>
-    <style>
-        body { margin: 0; font: 16px/1.45 Georgia, serif; color: #1c1915; background: #f6f1e8; }
-        main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 8px 0; border-bottom: 1px solid #ddd4c6; }
-        td:last-child { text-align: right; }
-    </style>
+    <meta name="description" content="Inscripción a <?= esc($evento) ?> · Budismo Camino del Diamante Colombia">
+    <title>Recibo · <?= esc($evento) ?></title>
+    <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
 </head>
 <body>
-<main>
+<header class="marca-cabecera">
+    <img class="logo" src="<?= base_url('favicon.svg') ?>" alt="" width="48" height="48">
+    <p class="organizacion">Budismo Camino del Diamante Colombia</p>
+</header>
+<main class="contenedor">
     <h1><?= esc($evento) ?></h1>
-    <p>Inscripción número <?= esc((string) $recibo['id']) ?> de <?= esc($recibo['nombre']) ?>, documento <?= esc($recibo['documento']) ?>.</p>
-    <p>Este resumen quedó congelado el <?= esc($recibo['momento']) ?>. Un cambio posterior del catálogo no lo reescribe.</p>
-    <table>
+    <p class="subtitulo">Inscripción número <?= esc((string) $recibo['id']) ?> de <?= esc($recibo['nombre']) ?>, documento <?= esc($recibo['documento']) ?>. Registrada el <?= esc($recibo['momento']) ?>.</p>
+
+    <div class="recibo-caja">
+        <p>Este resumen quedó congelado cuando terminaste la inscripción. Un cambio posterior del catálogo no lo reescribe.</p>
+        <table class="recibo-tabla">
         <?php foreach ($recibo['lineas'] as $linea): ?>
             <tr>
                 <td><?= esc($linea['descripcion']) ?></td>
@@ -28,19 +30,27 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
             </tr>
         <?php endforeach ?>
         <tr>
-            <td>Total en línea</td>
-            <td>$ <?= $pesos((int) $recibo['total']) ?></td>
+            <td><strong>Total en línea</strong></td>
+            <td><strong>$ <?= $pesos((int) $recibo['total']) ?></strong></td>
         </tr>
     </table>
-    <p>Forma de pago: <?= esc($recibo['forma']) ?>.</p>
+    <p>Forma de pago: <strong><?= esc($recibo['forma']) ?></strong>.</p>
     <?php if (($recibo['comprobante'] ?? '') !== ''): ?>
         <p>Comprobante recibido: <?= esc($recibo['comprobante']) ?>.</p>
     <?php endif ?>
-    <p><?= $recibo['cobra'] ? 'Quedó pendiente de confirmación de tesorería.' : 'Esta forma no se cobra en el registro. El total es informativo.' ?></p>
+    <div class="recibo-nota">
+        <?= $recibo['cobra'] ? 'Quedó pendiente de confirmación de tesorería.' : 'Esta forma no se cobra en el registro. El total es informativo.' ?>
+    </div>
+    </div>
+
     <?php foreach ($recibo['notas'] as $nota): ?>
-        <p><?= esc($nota) ?></p>
+        <p class="recibo-nota"><?= esc($nota) ?></p>
     <?php endforeach ?>
-    <p><a href="<?= site_url('e/' . $slug) ?>">Nueva inscripción</a></p>
+
+    <div class="acciones">
+        <a class="boton-secundario" href="<?= site_url() ?>">← Volver a eventos</a>
+        <a class="boton-primario" href="<?= site_url('e/' . $slug) ?>">Nueva inscripción</a>
+    </div>
 </main>
 </body>
 </html>

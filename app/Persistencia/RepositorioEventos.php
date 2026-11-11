@@ -55,16 +55,24 @@ final class RepositorioEventos
     }
 
     /**
-     * @return list<array{slug: string, nombre: string}>
+     * @return list<array{slug: string, nombre: string, descripcion: string}>
      */
     public function publicados(): array
     {
         if (! $this->enPruebas()) {
             try {
-                $filas = db_connect()->table('eventos')->select('slug, nombre')->orderBy('nombre')->get()->getResultArray();
+                $filas = db_connect()->table('eventos')->select('slug, nombre, programa_json')->orderBy('nombre')->get()->getResultArray();
                 if ($filas !== []) {
                     return array_map(
-                        static fn (array $fila): array => ['slug' => (string) $fila['slug'], 'nombre' => (string) $fila['nombre']],
+                        static function (array $fila): array {
+                            $programa = json_decode((string) $fila['programa_json'], true);
+
+                            return [
+                                'slug' => (string) $fila['slug'],
+                                'nombre' => (string) $fila['nombre'],
+                                'descripcion' => is_array($programa) ? (string) ($programa['descripcion'] ?? '') : '',
+                            ];
+                        },
                         $filas,
                     );
                 }
@@ -76,7 +84,7 @@ final class RepositorioEventos
         foreach ($this->slugsSemilla() as $slug) {
             $programa = $this->desdeArchivo($slug);
             if ($programa !== null) {
-                $eventos[] = ['slug' => $slug, 'nombre' => $programa->nombre];
+                $eventos[] = ['slug' => $slug, 'nombre' => $programa->nombre, 'descripcion' => $programa->descripcion];
             }
         }
 

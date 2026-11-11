@@ -6,22 +6,32 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Inscripciones a eventos de Budismo Camino del Diamante Colombia">
     <title>Inscripciones</title>
-    <style>
-        body { margin: 0; font: 16px/1.45 Georgia, serif; color: #1c1915; background: #f6f1e8; }
-        main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
-        a { color: inherit; }
-    </style>
+    <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
 </head>
 <body>
-<main>
+<header class="marca-cabecera">
+    <img class="logo" src="<?= base_url('favicon.svg') ?>" alt="" width="48" height="48">
+    <p class="organizacion">Budismo Camino del Diamante Colombia</p>
+</header>
+<main class="contenedor">
     <h1>Inscripciones</h1>
+    <p class="subtitulo">Elegí el evento en el que querés participar. Cada inscripción es individual: si venís en familia, llená una por persona.</p>
     <?php if ($eventos === []): ?>
-        <p>No hay eventos publicados.</p>
+        <p class="recibo-nota">No hay eventos abiertos ahora. Volvé pronto o escribí a tu centro.</p>
     <?php else: ?>
-        <ul>
+        <ul class="lista-eventos">
             <?php foreach ($eventos as $evento): ?>
-                <li><a href="<?= site_url('e/' . $evento['slug']) ?>"><?= esc($evento['nombre']) ?></a></li>
+                <li>
+                    <a class="tarjeta-evento" href="<?= site_url('e/' . $evento['slug']) ?>">
+                        <h2><?= esc($evento['nombre']) ?></h2>
+                        <?php if (($evento['descripcion'] ?? '') !== ''): ?>
+                            <p><?= esc($evento['descripcion']) ?></p>
+                        <?php endif ?>
+                    </a>
+                </li>
             <?php endforeach ?>
         </ul>
     <?php endif ?>

@@ -19,7 +19,7 @@ $modo = static function (string $campo, string $curso) use ($entrada): string {
 };
 $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 $error = static fn (string $campo): string => isset($errores[$campo])
-    ? '<p class="error">' . esc($errores[$campo]) . '</p>'
+    ? '<p class="error-campo">' . esc($errores[$campo]) . '</p>'
     : '';
 $cursosElegidos = array_values(array_filter(
     $entrada['cursos'] ?? [],
@@ -31,54 +31,43 @@ $cursosElegidos = array_values(array_filter(
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Inscripción a <?= esc($programa->nombre) ?> · Budismo Camino del Diamante Colombia">
     <title><?= esc($programa->nombre) ?></title>
-    <style>
-        :root { color-scheme: light; }
-        body { margin: 0; font: 16px/1.45 Georgia, "Times New Roman", serif; color: #1c1915; background: #f6f1e8; }
-        main { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
-        h1 { font-weight: 500; font-size: 2rem; margin-bottom: 0.2rem; }
-        h2 { font-size: 1.25rem; margin: 2rem 0 0.8rem; }
-        p.lead { color: #5c5348; }
-        form { display: grid; gap: 8px; }
-        fieldset { border: 1px solid #ddd4c6; background: #fffdf9; padding: 16px; margin: 0; }
-        legend { padding: 0 6px; }
-        label { display: grid; gap: 4px; margin: 8px 0; }
-        input, select { font: inherit; padding: 8px; border: 1px solid #c8bfb2; background: white; }
-        .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .check { display: flex; gap: 8px; align-items: center; }
-        .error { color: #8a2b2b; margin: 0; }
-        .oculto { display: none !important; }
-        #avisos { margin: 12px 0; padding-left: 1.2rem; color: #8a2b2b; }
-        aside { position: sticky; top: 0; z-index: 2; margin: 16px 0; padding: 16px; background: #1c1915; color: #f6f1e8; }
-        aside strong { font-size: 1.8rem; }
-        button { font: inherit; padding: 10px 16px; border: 0; background: #1c1915; color: #f6f1e8; cursor: pointer; }
-        button.secundario { background: transparent; color: #1c1915; border: 1px solid #1c1915; }
-        .acciones { display: flex; gap: 8px; margin-top: 16px; }
-        @media (max-width: 700px) { .fila { grid-template-columns: 1fr; } }
-    </style>
+    <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
 </head>
 <body>
-<main>
+<a class="saltar-vista" href="#formulario-inicio">Saltar al formulario</a>
+
+<header class="marca-cabecera">
+    <img class="logo" src="<?= base_url('favicon.svg') ?>" alt="" width="48" height="48">
+    <p class="organizacion">Budismo Camino del Diamante Colombia</p>
+</header>
+
+<main class="contenedor" id="formulario-inicio">
     <h1><?= esc($programa->nombre) ?></h1>
-    <p class="lead">Al marcar un curso aparecen sus preguntas. El total se actualiza solo: cada comida suma <?= $pesos($programa->catalogo->precioComida) ?> y cada bus del curso, <?= $pesos($programa->catalogo->precioFranjaBus) ?>. La dieta, los equipos y el alojamiento no cambian el valor.</p>
-    <aside id="total">
+    <p class="subtitulo">Al marcar un curso aparecen sus preguntas. El total se actualiza solo: cada comida suma <?= $pesos($programa->catalogo->precioComida) ?> y cada bus del curso, <?= $pesos($programa->catalogo->precioFranjaBus) ?>. La dieta, los equipos y el alojamiento no cambian el valor.</p>
+    <aside class="total-caja" id="total">
         <p>Total en línea</p>
-        <strong id="total-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></strong>
-        <ul id="total-lineas">
+        <div class="total-monto" id="total-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></div>
+        <ul class="total-lineas" id="total-lineas">
             <?php if ($cotizacion !== null): ?>
                 <?php foreach ([...$cotizacion->lineas, ...$cotizacion->ajustes] as $linea): ?>
                     <li><?= esc($linea->descripcion) ?>: $ <?= $pesos($linea->subtotal()) ?></li>
                 <?php endforeach ?>
             <?php endif ?>
         </ul>
-        <div id="total-notas">
+        <div class="total-notas" id="total-notas">
             <?php foreach ($notas as $nota): ?>
                 <p><?= esc($nota) ?></p>
             <?php endforeach ?>
         </div>
     </aside>
-    <ul id="avisos" class="oculto"></ul>
-    <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar')]) ?>
+    <div class="avisos si-oculto" id="avisos">
+        <strong>Revisa estos datos antes de continuar:</strong>
+        <ul id="avisos-lista"></ul>
+    </div>
+    <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar'), 'data-evento' => esc($programa->nombre)]) ?>
 
     <h2>Tus datos</h2>
     <?php foreach ($programa->ficha as $campo): ?>
@@ -126,7 +115,7 @@ $cursosElegidos = array_values(array_filter(
             <?php endforeach ?>
             <?= $error('transporte_ida') ?><?= $error('transporte_regreso') ?>
             <?php if ($programa->franjasDe($curso->codigo, 'ida') !== []): ?>
-                <div class="depende<?= $modo('transporte_ida', $curso->codigo) === 'curso' ? '' : ' oculto' ?>" data-si="transporte_ida[<?= esc($curso->codigo) ?>]=curso">
+                <div class="depende<?= $modo('transporte_ida', $curso->codigo) === 'curso' ? '' : ' si-oculto' ?>" data-si="transporte_ida[<?= esc($curso->codigo) ?>]=curso">
                 <label>Franja de llegada
                     <select name="franja_ida">
                         <option value="">Elige si vienes en el transporte del curso</option>
@@ -137,7 +126,7 @@ $cursosElegidos = array_values(array_filter(
                     <?= $error('franja_ida') ?>
                 </label>
                 </div>
-                <div class="depende<?= $modo('transporte_regreso', $curso->codigo) === 'curso' ? '' : ' oculto' ?>" data-si="transporte_regreso[<?= esc($curso->codigo) ?>]=curso">
+                <div class="depende<?= $modo('transporte_regreso', $curso->codigo) === 'curso' ? '' : ' si-oculto' ?>" data-si="transporte_regreso[<?= esc($curso->codigo) ?>]=curso">
                 <label>Franja de salida
                     <select name="franja_regreso">
                         <option value="">Elige si sales en el transporte del curso</option>
@@ -162,7 +151,7 @@ $cursosElegidos = array_values(array_filter(
                     </select>
                     <?= $error('alojamiento_' . $curso->codigo) ?>
                 </label>
-                <label class="depende<?= $valor('alojamiento_' . $curso->codigo) === 'cama' ? '' : ' oculto' ?>" data-si="alojamiento_<?= esc($curso->codigo) ?>=cama">Condición, si necesitas cama <input name="condicion_cama_<?= esc($curso->codigo) ?>" value="<?= $valor('condicion_cama_' . $curso->codigo) ?>"><?= $error('condicion_cama_' . $curso->codigo) ?></label>
+                <label class="depende<?= $valor('alojamiento_' . $curso->codigo) === 'cama' ? '' : ' si-oculto' ?>" data-si="alojamiento_<?= esc($curso->codigo) ?>=cama">Condición, si necesitas cama <input name="condicion_cama_<?= esc($curso->codigo) ?>" value="<?= $valor('condicion_cama_' . $curso->codigo) ?>"><?= $error('condicion_cama_' . $curso->codigo) ?></label>
                 <?php if ($alojamiento['pernocta_extra'] ?? false): ?>
                 <label>¿Pernoctas fuera de las fechas? Se paga en sitio.
                     <select name="pernocta_extra_<?= esc($curso->codigo) ?>">
@@ -172,7 +161,7 @@ $cursosElegidos = array_values(array_filter(
                     </select>
                     <?= $error('pernocta_extra_' . $curso->codigo) ?>
                 </label>
-                <label class="depende<?= ($valor('pernocta_extra_' . $curso->codigo) === 'si' || $valor('pernocta_extra') === 'si') ? '' : ' oculto' ?>" data-si="pernocta_extra_<?= esc($curso->codigo) ?>=si">Si respondiste sí, ¿apoyas montaje o desmontaje?
+                <label class="depende<?= ($valor('pernocta_extra_' . $curso->codigo) === 'si' || $valor('pernocta_extra') === 'si') ? '' : ' si-oculto' ?>" data-si="pernocta_extra_<?= esc($curso->codigo) ?>=si">Si respondiste sí, ¿apoyas montaje o desmontaje?
                     <select name="apoyo_montaje_<?= esc($curso->codigo) ?>">
                         <option value="">Elige</option>
                         <?php foreach (['no' => 'No', 'montaje' => 'Montaje', 'desmontaje' => 'Desmontaje', 'ambos' => 'Ambos'] as $codigoApoyo => $etiquetaApoyo): ?>
@@ -204,20 +193,25 @@ $cursosElegidos = array_values(array_filter(
         </select>
         <?= $error('forma_pago') ?>
     </label>
-    <div id="bloque-comprobante" class="depende<?= in_array($valor('forma_pago'), ['transferencia', 'tarjeta'], true) ? '' : ' oculto' ?>">
+    <div id="bloque-comprobante" class="depende<?= in_array($valor('forma_pago'), ['transferencia', 'tarjeta'], true) ? '' : ' si-oculto' ?>">
     <label>Comprobante, solo si pagas por transferencia o tarjeta solas
-        <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png">
+        <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png" id="input-comprobante">
         <?= $error('comprobante') ?>
     </label>
+    <div id="nombre-archivo" class="archivo-nombre si-oculto">
+        <span class="icono-doc">📄</span>
+        <span id="nombre-archivo-texto"></span>
+        <button type="button" id="quitar-archivo">Quitar</button>
+    </div>
     <?php if ($valor('comprobante_guardado') !== ''): ?>
-        <p>Comprobante guardado. No hace falta volver a subirlo.</p>
+        <p class="recibo-nota">Comprobante guardado. No hace falta volver a subirlo.</p>
         <input type="hidden" name="comprobante_guardado" value="<?= $valor('comprobante_guardado') ?>">
     <?php endif ?>
     </div>
 
     <div class="acciones">
-        <button class="secundario" type="submit" name="accion" value="actualizar">Ver total</button>
-        <button type="submit" name="accion" value="confirmar">Terminar inscripción</button>
+        <button class="boton-secundario" type="submit" name="accion" value="actualizar">Ver total</button>
+        <button class="boton-primario" type="submit" name="accion" value="confirmar">Terminar inscripción</button>
     </div>
     <?= form_close() ?>
     <script src="<?= base_url('js/inscripcion.js') ?>"></script>

@@ -5,6 +5,7 @@
     }
 
     const avisos = document.getElementById('avisos');
+    const avisosLista = document.getElementById('avisos-lista');
     const totalCaja = document.getElementById('total');
     const totalMonto = document.getElementById('total-monto');
     const totalLineas = document.getElementById('total-lineas');
@@ -19,7 +20,7 @@
     }
 
     function mostrar(elemento, visible) {
-        elemento.classList.toggle('oculto', !visible);
+        elemento.classList.toggle('si-oculto', !visible);
         elemento.querySelectorAll('input, select, textarea').forEach((control) => {
             if (control.closest('[data-si], [data-curso]') !== elemento && control !== elemento) {
                 return;
@@ -39,13 +40,13 @@
 
         form.querySelectorAll('[data-si]').forEach((bloque) => {
             if (bloque.closest('[data-curso]')?.classList.contains('oculto')) {
-                bloque.classList.add('oculto');
+                bloque.classList.add('si-oculto');
                 return;
             }
             const [nombre, esperado] = bloque.dataset.si.split('=');
             const actual = valor(nombre);
             const visible = esperado.split('|').includes(actual);
-            bloque.classList.toggle('oculto', !visible);
+            bloque.classList.toggle('si-oculto', !visible);
             bloque.querySelectorAll('input, select, textarea').forEach((control) => {
                 control.disabled = !visible;
             });
@@ -53,22 +54,30 @@
 
         const pago = campo('forma_pago')?.selectedOptions[0];
         const pideArchivo = pago?.dataset.pide === '1';
-        document.getElementById('bloque-comprobante')?.classList.toggle('oculto', !pideArchivo);
+        document.getElementById('bloque-comprobante')?.classList.toggle('si-oculto', !pideArchivo);
 
-        let dietaVisible = false;
+        const hayComidas = [...form.querySelectorAll('input[name="comidas[]"]:checked')].length > 0;
         form.querySelectorAll('select[name="dieta"]').forEach((select) => {
             const bloque = select.closest('[data-curso]');
-            const usable = bloque && !bloque.classList.contains('oculto') && !dietaVisible;
-            if (usable) {
-                dietaVisible = true;
-            }
-            select.disabled = !usable;
-            select.closest('label')?.classList.toggle('oculto', !usable);
+            const cursoActivo = bloque && !bloque.classList.contains('oculto');
+            const mostrarDieta = cursoActivo && hayComidas;
+            select.disabled = !mostrarDieta;
+            select.closest('label')?.classList.toggle('si-oculto', !mostrarDieta);
         });
     }
 
+    function mostrarSpinner() {
+        totalMonto.textContent = '';
+        const spinner = document.createElement('div');
+        spinner.className = 'total-spinner';
+        for (let i = 0; i < 3; i++) {
+            const punto = document.createElement('span');
+            spinner.append(punto);
+        }
+        totalMonto.append(spinner);
+    }
+
     function pintarTotal(datos) {
-        totalCaja.classList.remove('oculto');
         totalMonto.textContent = datos.total_formato === null ? '—' : `$ ${datos.total_formato}`;
         totalLineas.replaceChildren(...(datos.lineas || []).map((linea) => {
             const item = document.createElement('li');
@@ -84,6 +93,9 @@
 
     async function pedirTotal() {
         const actual = ++pedido;
+        if (actual === 1) {
+            mostrarSpinner();
+        }
         const datos = new FormData(form);
         datos.set('accion', 'actualizar');
         datos.delete('comprobante');
@@ -99,6 +111,7 @@
             pintarTotal(await respuesta.json());
         } catch (error) {
             if (actual === pedido) {
+                totalMonto.textContent = '—';
                 totalNotas.textContent = 'No se pudo actualizar el total. Revisa la conexión.';
             }
         }
@@ -112,7 +125,7 @@
             }
         };
         form.querySelectorAll('[data-requerido="1"]').forEach((control) => {
-            if (control.disabled || control.closest('.oculto')) {
+            if (control.disabled || control.closest('.oculto') || control.closest('.si-oculto')) {
                 return;
             }
             const mensaje = control.dataset.mensaje || 'Completa este campo.';
@@ -183,18 +196,49 @@
     form.querySelector('[value="confirmar"]')?.addEventListener('click', (evento) => {
         aplicar();
         const faltan = validar();
-        avisos.replaceChildren();
-        if (faltan.length === 0) {
+        avisos.classList.add('si-oculto');
+        if (avisosLista) {
+            avisosLista.replaceChildren();
+        }
+        if (faltan.length > 0) {
+            evento.preventDefault();
+            faltan.forEach((mensaje) => {
+                const item = document.createElement('li');
+                item.textContent = mensaje;
+                avisosLista?.append(item);
+            });
+            avisos.classList.remove('si-oculto');
+            avisos.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
-        evento.preventDefault();
-        faltan.forEach((mensaje) => {
-            const item = document.createElement('li');
-            item.textContent = mensaje;
-            avisos.append(item);
-        });
-        avisos.classList.remove('oculto');
-        avisos.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const totalTexto = totalMonto.textContent.trim() || '—';
+        const nombreEvento = form.dataset.evento || 'este evento';
+        const seguro = confirm(`Vas a inscribirte en ${nombreEvento}. Total: ${totalTexto}. ¿Confirmás?`);
+        if (!seguro) {
+            evento.preventDefault();
+        }
+    });
+
+    const archivoInput = document.getElementById('input-comprobante');
+    const nombreArchivo = document.getElementById('nombre-archivo');
+    const nombreArchivoTexto = document.getElementById('nombre-archivo-texto');
+    const quitarArchivo = document.getElementById('quitar-archivo');
+
+    archivoInput?.addEventListener('change', () => {
+        const archivo = archivoInput.files[0];
+        if (!archivo) {
+            nombreArchivo?.classList.add('si-oculto');
+            return;
+        }
+        if (nombreArchivoTexto) {
+            nombreArchivoTexto.textContent = archivo.name;
+        }
+        nombreArchivo?.classList.remove('si-oculto');
+    });
+
+    quitarArchivo?.addEventListener('click', () => {
+        archivoInput.value = '';
+        nombreArchivo?.classList.add('si-oculto');
     });
 
     aplicar();
