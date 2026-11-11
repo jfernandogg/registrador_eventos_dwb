@@ -75,6 +75,28 @@ class Admin extends BaseController
         ]);
     }
 
+    /**
+     * @return string|ResponseInterface
+     */
+    public function detalleInscrito(string $slug, $id = null)
+    {
+        if ($this->eventos->datos($slug) === null) {
+            return redirect()->to('/admin');
+        }
+        $detalle = $this->eventos->detalleInscrito($slug, (int) $id);
+        if ($detalle === null) {
+            return redirect()->to('/admin/eventos/' . $slug . '/inscritos');
+        }
+        $ver = (string) $this->request->getGet('ver');
+
+        return view('admin/detalle-inscrito', [
+            'slug' => $slug,
+            'nombreEvento' => (string) ($this->eventos->datos($slug)['nombre'] ?? $slug),
+            'detalle' => $detalle,
+            'ver' => $ver,
+        ]);
+    }
+
     public function comprobante(string $slug, $id = null)
     {
         $ruta = $this->eventos->archivoComprobante($slug, (int) $id);

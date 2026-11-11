@@ -267,6 +267,41 @@ final class RepositorioEventos
     /**
      * @return array<string, mixed>|null
      */
+    public function detalleInscrito(string $slug, int $id): ?array
+    {
+        $eventoId = $this->id($slug);
+        if ($eventoId === null || $id < 1) {
+            return null;
+        }
+        $fila = db_connect()->table('inscripciones')
+            ->where('id', $id)
+            ->where('evento_id', $eventoId)
+            ->get()
+            ->getRowArray();
+        if (! is_array($fila)) {
+            return null;
+        }
+        $nombre = $this->datos($slug)['nombre'] ?? $slug;
+
+        return [
+            'id' => (int) $fila['id'],
+            'nombre' => (string) $fila['nombre'],
+            'documento' => (string) $fila['documento'],
+            'correo' => (string) $fila['correo'],
+            'total' => (int) $fila['total'],
+            'estado' => (string) $fila['estado'],
+            'creado_en' => (string) $fila['creado_en'],
+            'comprobante' => (string) ($fila['comprobante'] ?? ''),
+            'evento' => (string) $nombre,
+            'entrada' => json_decode((string) $fila['entrada_json'], true) ?: [],
+            'cotizacion' => json_decode((string) $fila['cotizacion_json'], true) ?: [],
+            'notas' => json_decode((string) $fila['notas_json'], true) ?: [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
     public function recibo(string $slug, int $id): ?array
     {
         if ($this->enPruebas()) {
