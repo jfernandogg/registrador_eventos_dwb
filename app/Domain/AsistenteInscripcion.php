@@ -132,6 +132,8 @@ final class AsistenteInscripcion
             'pernocta_extra' => $texto($entrada['pernocta_extra'] ?? ''),
             'apoyo_montaje' => $texto($entrada['apoyo_montaje'] ?? ''),
             'equipos' => $equipos,
+            'modo_curso' => $this->textosAgrupados($entrada['modo_curso'] ?? [], $texto),
+            'sesiones_elegidas' => $this->listasAgrupadas($entrada['sesiones_elegidas'] ?? [], $lista),
             'forma_pago' => $texto($entrada['forma_pago'] ?? ''),
         ] + $this->camposDelCurso($entrada, $texto) + $this->valoresFicha($programa, $entrada, $texto);
     }
@@ -190,6 +192,44 @@ final class AsistenteInscripcion
         }
 
         return $extra;
+    }
+
+    /**
+     * @param mixed                     $agrupado
+     * @param callable(mixed): string  $texto
+     *
+     * @return array<string, string>
+     */
+    private function textosAgrupados(mixed $agrupado, callable $texto): array
+    {
+        if (! is_array($agrupado)) {
+            return [];
+        }
+        $result = [];
+        foreach ($agrupado as $clave => $valor) {
+            $result[(string) $clave] = $texto($valor);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param mixed                         $agrupado
+     * @param callable(mixed): list<string> $lista
+     *
+     * @return array<string, list<string>>
+     */
+    private function listasAgrupadas(mixed $agrupado, callable $lista): array
+    {
+        if (! is_array($agrupado)) {
+            return [];
+        }
+        $result = [];
+        foreach ($agrupado as $clave => $valor) {
+            $result[(string) $clave] = $lista($valor);
+        }
+
+        return $result;
     }
 
     /**
