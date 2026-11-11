@@ -222,6 +222,7 @@ code { font-size: 0.9em; background: #f1f3f5; padding: 0.05rem 0.3rem; border-ra
 
 /* Modal de exportación */
 .modal-fondo { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-fondo.si-oculto, .si-oculto { display: none !important; }
 .modal-caja { background: var(--card); border: 1px solid var(--linea); border-radius: 6px; padding: 1.5rem; min-width: 320px; max-width: 420px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
 
 /* Lista de eventos en admin */
