@@ -33,6 +33,7 @@ $conteos = [
     'cursos' => count(array_filter($lista('curso_codigo'))),
     'comidas' => count(array_filter($lista('comida_id'))),
     'franjas' => count(array_filter($lista('franja_id'))),
+    'sesiones' => count(array_filter($lista('sesion_id'))),
     'pagos' => count(array_filter($lista('pago_codigo'))),
     'equipos' => count(array_filter($lista('equipo_codigo'))),
     'campos' => count(array_filter($lista('campo_clave'))),
@@ -65,6 +66,7 @@ $conteos = [
         <a href="#cursos">Cursos <span><?= $conteos['cursos'] ?></span></a>
         <a href="#comidas">Comidas <span><?= $conteos['comidas'] ?></span></a>
         <a href="#transporte">Transporte <span><?= $conteos['franjas'] ?></span></a>
+        <a href="#sesiones">Sesiones <span><?= $conteos['sesiones'] ?></span></a>
         <a href="#alojamiento">Alojamiento</a>
         <a href="#pagos">Pagos <span><?= $conteos['pagos'] ?></span></a>
         <a href="#equipos">Equipos <span><?= $conteos['equipos'] ?></span></a>
@@ -181,6 +183,39 @@ $conteos = [
             </table>
             <p class="ayuda">Llegada es el inicio del curso. Salida es el regreso. La etiqueta debe decir fecha, hora, origen y destino. Si no elige franja, ese bus no entra al total.</p>
             <button type="button" class="boton claro" data-agregar="franjas-filas">Agregar franja</button>
+        </section>
+
+        <section class="panel" id="sesiones">
+            <h2>Sesiones</h2>
+            <p class="intro">Subdivisión de un curso: enseñanzas, meditaciones, trabajos. Elegir sesiones sueltas no necesariamente suma lo mismo que el curso completo.</p>
+            <table class="tabla">
+                <thead><tr><th>Curso</th><th>Id</th><th>Título</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Costo</th><th></th></tr></thead>
+                <tbody id="sesiones-filas">
+                <?php for ($i = 0; $i < $n(['sesion_curso', 'sesion_id', 'sesion_titulo']); $i++): ?>
+                    <?php $tipo = (string) ($lista('sesion_tipo')[$i] ?? ''); ?>
+                    <tr>
+                        <td data-etiqueta="Curso"><input name="sesion_curso[]" value="<?= $celda('sesion_curso', $i) ?>" placeholder="kpl"></td>
+                        <td data-etiqueta="Id"><input name="sesion_id[]" value="<?= $celda('sesion_id', $i) ?>" placeholder="kpl_s1"></td>
+                        <td data-etiqueta="Título"><input name="sesion_titulo[]" value="<?= $celda('sesion_titulo', $i) ?>" placeholder="Enseñanza de Lama Ole"></td>
+                        <td data-etiqueta="Tipo">
+                            <select name="sesion_tipo[]">
+                                <option value=""></option>
+                                <option value="ensenanza" <?= $tipo === 'ensenanza' ? 'selected' : '' ?>>Enseñanza</option>
+                                <option value="meditacion" <?= $tipo === 'meditacion' ? 'selected' : '' ?>>Meditación</option>
+                                <option value="trabajo" <?= $tipo === 'trabajo' ? 'selected' : '' ?>>Trabajo</option>
+                                <option value="libre" <?= $tipo === 'libre' ? 'selected' : '' ?>>Libre</option>
+                            </select>
+                        </td>
+                        <td data-etiqueta="Inicio"><input name="sesion_inicio[]" value="<?= $celda('sesion_inicio', $i) ?>" placeholder="2026-11-28T09:00"></td>
+                        <td data-etiqueta="Fin"><input name="sesion_fin[]" value="<?= $celda('sesion_fin', $i) ?>" placeholder="2026-11-28T11:30"></td>
+                        <td data-etiqueta="Costo"><input name="sesion_costo[]" inputmode="numeric" value="<?= $celda('sesion_costo', $i) ?>" placeholder="50000"></td>
+                        <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
+                    </tr>
+                <?php endfor ?>
+                </tbody>
+            </table>
+            <p class="ayuda">El curso es el código del curso que ya creaste. El id es interno y no se repite dentro del mismo curso. Inicio y fin en formato ISO (AAAA-MM-DDTHH:MM). Costo 0 = gratuita. Si el curso tiene sesiones, el participante puede elegir curso completo o sesiones sueltas.</p>
+            <button type="button" class="boton claro" data-agregar="sesiones-filas">Agregar sesión</button>
         </section>
 
         <section class="panel" id="alojamiento">
@@ -344,6 +379,16 @@ $conteos = [
     <td data-etiqueta="Curso"><input name="franja_curso[]" placeholder="kpl"></td>
     <td data-etiqueta="Sentido"><select name="franja_sentido[]"><option value=""></option><option value="ida">Llegada</option><option value="regreso">Salida</option></select></td>
     <td data-etiqueta="Etiqueta"><input name="franja_etiqueta[]" placeholder="27 nov, 14:00, Bogotá → KPL"></td>
+    <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
+</tr></template>
+<template id="tpl-sesiones-filas"><tr>
+    <td data-etiqueta="Curso"><input name="sesion_curso[]" placeholder="kpl"></td>
+    <td data-etiqueta="Id"><input name="sesion_id[]" placeholder="kpl_s1"></td>
+    <td data-etiqueta="Título"><input name="sesion_titulo[]" placeholder="Enseñanza de Lama Ole"></td>
+    <td data-etiqueta="Tipo"><select name="sesion_tipo[]"><option value=""></option><option value="ensenanza">Enseñanza</option><option value="meditacion">Meditación</option><option value="trabajo">Trabajo</option><option value="libre">Libre</option></select></td>
+    <td data-etiqueta="Inicio"><input name="sesion_inicio[]" placeholder="2026-11-28T09:00"></td>
+    <td data-etiqueta="Fin"><input name="sesion_fin[]" placeholder="2026-11-28T11:30"></td>
+    <td data-etiqueta="Costo"><input name="sesion_costo[]" inputmode="numeric" placeholder="50000"></td>
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>
 <template id="tpl-pagos-filas"><tr>

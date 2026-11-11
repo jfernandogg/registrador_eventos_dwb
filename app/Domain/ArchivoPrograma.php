@@ -25,6 +25,17 @@ final class ArchivoPrograma
                     'codigo' => $curso->codigo,
                     'nombre' => $curso->nombre,
                     'tarifa' => $curso->tarifa,
+                    'sesiones' => array_map(
+                        static fn (Sesion $s): array => [
+                            'id' => $s->id,
+                            'titulo' => $s->titulo,
+                            'tipo' => $s->tipo,
+                            'inicio' => $s->inicio,
+                            'fin' => $s->fin,
+                            'costo' => $s->costo,
+                        ],
+                        $curso->sesiones,
+                    ),
                 ],
                 array_values($programa->cursos),
             ),
@@ -82,7 +93,20 @@ final class ArchivoPrograma
     {
         $cursos = [];
         foreach ($datos['cursos'] ?? [] as $curso) {
-            $objeto = new Curso((string) $curso['codigo'], (string) $curso['nombre'], (int) $curso['tarifa']);
+            $sesionesRaw = $curso['sesiones'] ?? [];
+            $sesiones = [];
+            foreach ($sesionesRaw as $s) {
+                if (! is_array($s)) { continue; }
+                $sesiones[] = new Sesion(
+                    (string) $s['id'],
+                    (string) $s['titulo'],
+                    (string) $s['tipo'],
+                    (string) $s['inicio'],
+                    (string) $s['fin'],
+                    (int) ($s['costo'] ?? 0),
+                );
+            }
+            $objeto = new Curso((string) $curso['codigo'], (string) $curso['nombre'], (int) $curso['tarifa'], $sesiones);
             $cursos[$objeto->codigo] = $objeto;
         }
 

@@ -168,6 +168,46 @@ final class EditorEvento
             return ['codigo' => $codigo, 'etiqueta' => $etiqueta, 'solo_curso' => $curso === '' ? null : $curso];
         });
 
+        $sesiones = self::filas($post, ['sesion_curso', 'sesion_id', 'sesion_titulo', 'sesion_tipo', 'sesion_inicio', 'sesion_fin', 'sesion_costo'], static function (array $fila) use ($codigos, &$errores): ?array {
+            if (trim($fila['sesion_id'] . $fila['sesion_titulo']) === '') {
+                return null;
+            }
+            $id = trim($fila['sesion_id']);
+            $titulo = trim($fila['sesion_titulo']);
+            $curso = self::codigo($fila['sesion_curso']);
+            if ($id === '' || $titulo === '') {
+                $errores[] = 'Cada sesión necesita id y título.';
+
+                return null;
+            }
+            if ($curso === '' || ! in_array($curso, $codigos, true)) {
+                $errores[] = 'La sesión ' . $titulo . ' necesita un curso válido.';
+
+                return null;
+            }
+
+            return [
+                'curso' => $curso,
+                'id' => $id,
+                'titulo' => $titulo,
+                'tipo' => $fila['sesion_tipo'],
+                'inicio' => trim($fila['sesion_inicio']),
+                'fin' => trim($fila['sesion_fin']),
+                'costo' => max(0, self::entero($fila['sesion_costo'] ?? 0)),
+            ];
+        });
+
+        // Agregar sesiones a los cursos
+        foreach ($cursos as &$obj) {
+            $obj['sesiones'] = [];
+        }
+        unset($obj);
+        foreach ($sesiones as $s) {
+            if (isset($cursos[$s['curso']])) {
+                $cursos[$s['curso']]['sesiones'][] = $s;
+            }
+        }
+
         $alojamientos = [];
         $publicado = $post['alojamiento'] ?? [];
         if (is_array($publicado)) {
@@ -275,13 +315,22 @@ final class EditorEvento
             'bandas_edad' => self::texto($datos['bandas_edad'] ?? []),
             'alojamiento' => [],
         ];
-        foreach (['curso_codigo', 'curso_nombre', 'curso_tarifa', 'comida_id', 'comida_curso', 'comida_etiqueta', 'franja_id', 'franja_curso', 'franja_sentido', 'franja_etiqueta', 'pago_codigo', 'pago_etiqueta', 'pago_cobra', 'pago_comprobante', 'equipo_codigo', 'equipo_etiqueta', 'equipo_curso', 'campo_clave', 'campo_etiqueta', 'campo_tipo', 'campo_requerido', 'campo_opciones', 'campo_visible', 'campo_rol', 'campo_mensaje', 'campo_padre'] as $clave) {
+        foreach (['curso_codigo', 'curso_nombre', 'curso_tarifa', 'comida_id', 'comida_curso', 'comida_etiqueta', 'franja_id', 'franja_curso', 'franja_sentido', 'franja_etiqueta', 'sesion_curso', 'sesion_id', 'sesion_titulo', 'sesion_tipo', 'sesion_inicio', 'sesion_fin', 'sesion_costo', 'pago_codigo', 'pago_etiqueta', 'pago_cobra', 'pago_comprobante', 'equipo_codigo', 'equipo_etiqueta', 'equipo_curso', 'campo_clave', 'campo_etiqueta', 'campo_tipo', 'campo_requerido', 'campo_opciones', 'campo_visible', 'campo_rol', 'campo_mensaje', 'campo_padre'] as $clave) {
             $post[$clave] = [];
         }
         foreach ($datos['cursos'] ?? [] as $curso) {
             $post['curso_codigo'][] = (string) $curso['codigo'];
             $post['curso_nombre'][] = (string) $curso['nombre'];
             $post['curso_tarifa'][] = (string) $curso['tarifa'];
+            foreach ($curso['sesiones'] ?? [] as $s) {
+                $post['sesion_curso'][] = (string) $curso['codigo'];
+                $post['sesion_id'][] = (string) $s['id'];
+                $post['sesion_titulo'][] = (string) $s['titulo'];
+                $post['sesion_tipo'][] = (string) $s['tipo'];
+                $post['sesion_inicio'][] = (string) $s['inicio'];
+                $post['sesion_fin'][] = (string) $s['fin'];
+                $post['sesion_costo'][] = (string) $s['costo'];
+            }
         }
         foreach ($datos['comidas'] ?? [] as $comida) {
             $post['comida_id'][] = (string) $comida['id'];

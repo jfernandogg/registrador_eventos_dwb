@@ -143,4 +143,14 @@ final class ProgramaEvento
             static fn (OpcionLista $equipo): bool => $equipo->soloCurso === null || $equipo->soloCurso === $codigoCurso,
         ));
     }
+
+    /**
+     * @return list<Sesion>
+     */
+    public function sesionesDe(string $codigoCurso): array
+    {
+        $curso = $this->cursos[$codigoCurso] ?? null;
+
+        return $curso !== null ? $curso->sesiones : [];
+    }
 }
