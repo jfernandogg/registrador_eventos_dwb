@@ -17,12 +17,13 @@ class Admin extends BaseController
         $this->helpers = ['form', 'url'];
         parent::initController($request, $response, $logger);
         $this->eventos = new RepositorioEventos();
+        $this->asegurarAdmin();
     }
 
     public function entrar()
     {
-        $this->asegurarAdmin();
         $error = '';
+        $aviso = '';
         if ($this->request->is('post')) {
             $correo = trim((string) $this->request->getPost('correo'));
             $clave = (string) $this->request->getPost('clave');
@@ -41,6 +42,7 @@ class Admin extends BaseController
         return view('admin/entrar', [
             'error' => $error,
             'vuelve' => $this->destino((string) $this->request->getGet('vuelve')),
+            'aviso' => $aviso,
         ]);
     }
 
@@ -264,6 +266,8 @@ class Admin extends BaseController
         $cols = array_column($db->query('SHOW COLUMNS FROM usuarios')->getResultArray(), 'Field');
         if (! in_array('rol', $cols, true)) {
             $db->query('ALTER TABLE usuarios ADD COLUMN rol VARCHAR(20) NOT NULL DEFAULT \'invitado\' AFTER clave_hash');
+            // El seed admin debe seguir siendo admin tras la migración
+            $db->query('UPDATE usuarios SET rol = \'admin\' WHERE correo = \'admin@localhost\' AND rol = \'invitado\'');
         }
         if (! in_array('activo', $cols, true)) {
             $db->query('ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1 AFTER rol');
@@ -518,10 +522,19 @@ class Admin extends BaseController
 
     private function requiereRol(string $rol): void
     {
-        $actual = (string) session()->get('admin_rol');
+        $adminId = (int) session()->get('admin_id');
+        $fila = db_connect()->table('usuarios')->where('id', $adminId)->get()->getRowArray();
+        $actual = is_array($fila) ? (string) ($fila['rol'] ?? 'invitado') : 'invitado';
+
+        // Refrescar sesión con el valor real de BD
+        session()->set('admin_rol', $actual);
+
         if ($rol === 'admin' && $actual !== 'admin') {
-            // Redirigir: solo admin puede
-            header('Location: ' . site_url('admin'));
+            echo view('admin/entrar', [
+                'error' => 'No tenés permiso para acceder a esta sección.',
+                'vuelve' => '/admin',
+                'aviso' => '',
+            ]);
             exit;
         }
     }
