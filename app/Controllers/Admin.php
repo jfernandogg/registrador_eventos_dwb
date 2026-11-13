@@ -266,8 +266,6 @@ class Admin extends BaseController
         $cols = array_column($db->query('SHOW COLUMNS FROM usuarios')->getResultArray(), 'Field');
         if (! in_array('rol', $cols, true)) {
             $db->query('ALTER TABLE usuarios ADD COLUMN rol VARCHAR(20) NOT NULL DEFAULT \'invitado\' AFTER clave_hash');
-            // El seed admin debe seguir siendo admin tras la migración
-            $db->query('UPDATE usuarios SET rol = \'admin\' WHERE correo = \'admin@localhost\' AND rol = \'invitado\'');
         }
         if (! in_array('activo', $cols, true)) {
             $db->query('ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1 AFTER rol');
@@ -278,6 +276,9 @@ class Admin extends BaseController
         if (! in_array('token_expira', $cols, true)) {
             $db->query('ALTER TABLE usuarios ADD COLUMN token_expira DATETIME DEFAULT NULL AFTER token');
         }
+
+        // El seed admin siempre debe ser admin, incluso si se migró antes
+        $db->query('UPDATE usuarios SET rol = \'admin\', activo = 1 WHERE correo = \'admin@localhost\' AND rol = \'invitado\'');
 
         if ($db->table('usuarios')->countAllResults() > 0) {
             return;
