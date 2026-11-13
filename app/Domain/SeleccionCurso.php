@@ -12,6 +12,7 @@ final class SeleccionCurso
         public readonly int $comidas = 0,
         public readonly int $franjasBus = 0,
         public readonly array $costosSesiones = [],
+        public readonly int $alojamientoCosto = 0,
     ) {
         if ($this->comidas < 0 || $this->franjasBus < 0) {
             throw new \InvalidArgumentException('Las cantidades no pueden ser negativas.');

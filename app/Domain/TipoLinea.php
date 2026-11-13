@@ -9,5 +9,6 @@ enum TipoLinea: string
     case Curso = 'curso';
     case Comida = 'comida';
     case Transporte = 'transporte';
+    case Alojamiento = 'alojamiento';
     case Ajuste = 'ajuste';
 }

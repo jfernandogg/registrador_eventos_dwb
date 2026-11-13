@@ -143,11 +143,13 @@ $cursosElegidos = array_values(array_filter(
             <?php if (isset($programa->alojamientos[$curso->codigo])): ?>
                 <?php $alojamiento = $programa->alojamientos[$curso->codigo]; ?>
                 <div data-alojamiento="1">
-                <label>Alojamiento. No se cobra aquí.
+                <label>Alojamiento
                     <select name="alojamiento_<?= esc($curso->codigo) ?>">
                         <option value="">Elige</option>
+                        <?php $costosAloj = $alojamiento['costos'] ?? []; ?>
                         <?php foreach ($alojamiento['opciones'] as $codigoOpcion => $etiquetaOpcion): ?>
-                            <option value="<?= esc($codigoOpcion) ?>" <?= $valor('alojamiento_' . $curso->codigo) === $codigoOpcion ? 'selected' : '' ?>><?= esc($etiquetaOpcion) ?></option>
+                            <?php $costo = (int) ($costosAloj[$codigoOpcion] ?? 0); ?>
+                            <option value="<?= esc($codigoOpcion) ?>" <?= $valor('alojamiento_' . $curso->codigo) === $codigoOpcion ? 'selected' : '' ?>><?= esc($etiquetaOpcion) ?><?= $costo > 0 ? ' — $ ' . $pesos($costo) : '' ?></option>
                         <?php endforeach ?>
                     </select>
                     <?= $error('alojamiento_' . $curso->codigo) ?>

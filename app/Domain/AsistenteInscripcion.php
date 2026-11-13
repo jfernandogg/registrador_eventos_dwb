@@ -434,7 +434,13 @@ final class AsistenteInscripcion
                 }
             }
 
-            $selecciones[] = new SeleccionCurso($codigo, $comidasPorCurso[$codigo], $franjasPorCurso[$codigo], $costosSesiones);
+            $alojamientoCosto = 0;
+            $alojElegido = (string) ($entrada['alojamiento_' . $codigo] ?? '');
+            if ($alojElegido !== '' && $alojElegido !== 'no' && isset($programa->alojamientos[$codigo]['costos'][$alojElegido])) {
+                $alojamientoCosto = $programa->alojamientos[$codigo]['costos'][$alojElegido];
+            }
+
+            $selecciones[] = new SeleccionCurso($codigo, $comidasPorCurso[$codigo], $franjasPorCurso[$codigo], $costosSesiones, $alojamientoCosto);
         }
 
         return [$selecciones, $notas, $errores];

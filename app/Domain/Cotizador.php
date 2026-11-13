@@ -54,6 +54,15 @@ final class Cotizador
                 );
             }
 
+            if ($seleccion->alojamientoCosto > 0) {
+                $lineas[] = new LineaCotizacion(
+                    'Alojamiento ' . $curso->nombre,
+                    $seleccion->alojamientoCosto,
+                    1,
+                    TipoLinea::Alojamiento,
+                );
+            }
+
             $descuento = $this->descuentoCurso($edad, $tarifaCurso);
             if ($descuento > 0) {
                 $ajustes[] = new LineaCotizacion(
