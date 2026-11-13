@@ -231,7 +231,7 @@ $conteos = [
 
         <section class="panel" id="alojamiento">
             <h2>Alojamiento</h2>
-            <p class="intro">Se pregunta y queda en la nota de logística. No entra al total: se paga en el sitio. Agregá las opciones que puede elegir el participante.</p>
+            <p class="intro">Agregá las opciones que puede elegir el participante. Podés ponerle costo a cada opción; si no tiene costo, dejalo en 0. La opción «no» suele ser gratis.</p>
             <?php $alojamiento = is_array($post['alojamiento'] ?? null) ? $post['alojamiento'] : []; ?>
             <?php $hayCurso = false; ?>
             <?php foreach ($lista('curso_codigo') as $codigoCurso): ?>
@@ -242,13 +242,14 @@ $conteos = [
                 <div style="margin-bottom: 1.2rem;">
                     <h3 style="margin: 0 0 0.4rem; font-size: 1rem;">Curso <?= esc(strtoupper((string) $codigoCurso)) ?></h3>
                     <table class="tabla">
-                        <thead><tr><th>Código</th><th>Etiqueta</th><th></th></tr></thead>
+                        <thead><tr><th>Código</th><th>Etiqueta</th><th>Costo</th><th></th></tr></thead>
                         <tbody id="aloj-<?= esc((string) $codigoCurso) ?>-filas">
                         <?php $nAloj = max(1, count($codigosAloj)); ?>
                         <?php for ($i = 0; $i < $nAloj; $i++): ?>
                             <tr>
                                 <td data-etiqueta="Código"><input name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones][codigo][]" value="<?= esc((string) ($codigosAloj[$i] ?? '')) ?>" placeholder="no"></td>
                                 <td data-etiqueta="Etiqueta"><input name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones][etiqueta][]" value="<?= esc((string) ($etiquetasAloj[$i] ?? '')) ?>" placeholder="No duermo en el curso"></td>
+                                <td data-etiqueta="Costo"><input name="alojamiento[<?= esc((string) $codigoCurso) ?>][opciones][costo][]" inputmode="numeric" value="<?= esc((string) ($bloque['opciones']['costo'][$i] ?? '0')) ?>" placeholder="0"></td>
                                 <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
                             </tr>
                         <?php endfor ?>
@@ -433,6 +434,7 @@ $conteos = [
 <template id="tpl-aloj-<?= esc($codigoCurso) ?>-filas"><tr>
     <td data-etiqueta="Código"><input name="alojamiento[<?= esc($codigoCurso) ?>][opciones][codigo][]" placeholder="no"></td>
     <td data-etiqueta="Etiqueta"><input name="alojamiento[<?= esc($codigoCurso) ?>][opciones][etiqueta][]" placeholder="No duermo en el curso"></td>
+    <td data-etiqueta="Costo"><input name="alojamiento[<?= esc($codigoCurso) ?>][opciones][costo][]" inputmode="numeric" placeholder="0"></td>
     <td><button type="button" class="boton peligro" data-quitar>Quitar</button></td>
 </tr></template>
 <?php endforeach ?>

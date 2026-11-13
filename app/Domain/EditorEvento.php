@@ -227,6 +227,7 @@ final class EditorEvento
                 }
                 $alojamientos[$codigo] = [
                     'opciones' => $opciones,
+                    'costos' => self::costosAlojamiento($bloque['opciones']['costo'] ?? [], $opciones),
                     'pernocta_extra' => ($bloque['pernocta'] ?? '') === '1',
                 ];
             }
@@ -297,6 +298,23 @@ final class EditorEvento
     }
 
     /**
+     * @param list<string> $costosRaw
+     * @param array<string, string> $opciones
+     * @return array<string, int>
+     */
+    private static function costosAlojamiento(array $costosRaw, array $opciones): array
+    {
+        $costos = [];
+        $i = 0;
+        foreach (array_keys($opciones) as $codigo) {
+            $costos[$codigo] = max(0, self::entero($costosRaw[$i] ?? 0));
+            $i++;
+        }
+
+        return $costos;
+    }
+
+    /**
      * @param array<string, mixed> $datos
      *
      * @return array<string, mixed>
@@ -362,6 +380,7 @@ final class EditorEvento
                 'opciones' => [
                     'codigo' => array_keys($opciones),
                     'etiqueta' => array_values($opciones),
+                    'costo' => array_values($alojamiento['costos'] ?? array_fill(0, count($opciones), 0)),
                 ],
                 'pernocta' => ! empty($alojamiento['pernocta_extra']) ? '1' : '0',
             ];
