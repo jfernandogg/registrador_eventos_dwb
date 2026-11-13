@@ -1,16 +1,16 @@
 :root {
-    --color-fondo: #faf8f5;
-    --color-texto: #1c1915;
-    --color-muted: #6b6560;
-    --color-primario: #2b3a4a;
-    --color-acento: #e8c547;
-    --color-borde: #e0dbd5;
+    --color-fondo: #ffffff;
+    --color-texto: #000000;
+    --color-muted: #555555;
+    --color-primario: #be0f34;
+    --color-acento: #be0f34;
+    --color-borde: #dee2e6;
     --color-tarjeta: #fff;
-    --color-alerta: #8a2b2b;
+    --color-alerta: #be0f34;
     --color-ok: #0f5132;
     --color-fondo-ok: #d1e7dd;
     --color-fondo-error: #f8d7da;
-    --sombra: 0 2px 8px rgba(43, 58, 74, 0.08);
+    --sombra: 0 2px 8px rgba(190, 15, 52, 0.08);
     --radio: 0.5rem;
 }
 
@@ -20,7 +20,7 @@ html { scroll-behavior: smooth; }
 
 body {
     margin: 0;
-    font: 16px/1.6 "Inter", "SF Pro Text", system-ui, -apple-system, sans-serif;
+    font: 16px/1.6 "Myriad Pro", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
     color: var(--color-texto);
     background: var(--color-fondo);
 }
@@ -30,16 +30,16 @@ a { color: var(--color-primario); }
 /* Cabecera de marca */
 .marca-cabecera {
     text-align: center;
-    padding: 2rem 1rem 1.5rem;
+    padding: 1.5rem 1rem 1rem;
     border-bottom: 1px solid var(--color-borde);
     margin-bottom: 2rem;
 }
 
-.marca-cabecera .logo {
+.marca-cabecera .logo-dwb {
     display: inline-block;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 0.5rem;
+    max-width: 100%;
+    height: auto;
+    max-height: 5rem;
 }
 
 .marca-cabecera .organizacion {
@@ -259,7 +259,7 @@ button:active, .boton:active { transform: translateY(1px); }
     font-size: 1.05rem;
 }
 
-.boton-primario:hover { background: #1f2c38; }
+.boton-primario:hover { background: #a00d2c; }
 
 .boton-secundario {
     background: transparent;
@@ -267,7 +267,7 @@ button:active, .boton:active { transform: translateY(1px); }
     border: 1px solid var(--color-primario);
 }
 
-.boton-secundario:hover { background: rgba(43, 58, 74, 0.05); }
+.boton-secundario:hover { background: rgba(190, 15, 52, 0.05); }
 
 .acciones {
     display: flex;

@@ -13,7 +13,7 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 </head>
 <body>
 <header class="marca-cabecera">
-    <img class="logo" src="<?= base_url('favicon.svg') ?>" alt="" width="48" height="48">
+    <img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt="DWB Colombia">
     <p class="organizacion">Budismo Camino del Diamante Colombia</p>
 </header>
 <main class="contenedor">

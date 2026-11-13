@@ -1,16 +1,16 @@
 :root {
-    --fondo: #f8f9fa;
+    --fondo: #ffffff;
     --tarjeta: #fff;
-    --texto: #212529;
-    --muted: #6c757d;
+    --texto: #000000;
+    --muted: #555555;
     --linea: #dee2e6;
-    --primario: #0d6efd;
-    --primario-oscuro: #0b5ed7;
+    --primario: #be0f34;
+    --primario-oscuro: #a00d2c;
     --peligro: #dc3545;
     --ok: #198754;
     --aviso: #fff3cd;
     --aviso-texto: #664d03;
-    --sombra: 0 0.125rem 0.25rem rgba(33, 37, 41, 0.06);
+    --sombra: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.08);
     --radio: 0.5rem;
 }
 
@@ -20,7 +20,7 @@ html { scroll-behavior: smooth; }
 
 body {
     margin: 0;
-    font: 16px/1.5 "Segoe UI", system-ui, sans-serif;
+    font: 16px/1.5 "Myriad Pro", "Source Sans Pro", "Segoe UI", system-ui, sans-serif;
     color: var(--texto);
     background: var(--fondo);
 }
@@ -61,6 +61,13 @@ body {
 .miga { color: var(--muted); font-size: 0.85rem; user-select: none; }
 
 .barra .activo { font-weight: 650; color: var(--texto); text-decoration: none; }
+
+/* Logo DWB en la barra */
+.logo-dwb { height: 2.4rem; width: auto; vertical-align: middle; }
+
+/* Header con logo DWB para páginas públicas */
+.marca-cabecera { text-align: center; padding: 1.5rem 1rem 1rem; }
+.marca-cabecera .logo-dwb { max-width: 100%; height: auto; width: auto; max-height: 5rem; }
 
 .contenido {
     display: grid;

@@ -51,7 +51,7 @@ $conteos = [
 <a class="saltar" href="#editor">Saltar al formulario</a>
 <header class="barra">
     <nav>
-        <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
+        <a class="marca" href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt=""></a>
         <?php if (! $nuevo): ?>
                             <a href="<?= site_url('e/' . $slug) ?>" target="_blank" rel="noopener">Previsualizar</a>
                             <a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a>

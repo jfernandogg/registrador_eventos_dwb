@@ -24,7 +24,7 @@ $cursosElegidos = array_values(array_filter(
 <body>
 <header class="barra">
     <nav>
-        <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
+        <a class="marca" href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt=""></a>
         <span class="miga">›</span>
         <a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>"><?= esc($nombreEvento) ?></a>
         <span class="miga">›</span>

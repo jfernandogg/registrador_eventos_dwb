@@ -12,7 +12,7 @@
 <body>
 <header class="barra">
     <nav>
-        <a class="marca" href="<?= site_url('admin') ?>">Eventos</a>
+        <a class="marca" href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt=""></a>
         <a class="activo" href="<?= site_url('admin') ?>">Lista</a>
         <a href="<?= site_url('admin/salir') ?>">Salir</a>
     </nav>
