@@ -1,6 +1,6 @@
 # Tareas del registrador
 
-Estado al 11 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no.
+Estado al 13 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no.
 
 ## Hecho
 
@@ -22,12 +22,14 @@ Estado al 11 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 - [x] Instrucciones de pago dinámicas: cuenta bancaria, Bre-b, Bold URL
 - [x] Integración con correo: invitaciones + notificación de inscripción (Mailpit en dev)
 - [x] Build de producción (`composer install --no-dev`) + guía de despliegue `DESPLIEGUE.md`
+- [x] Integración Bold por **API Link de pagos**: `BoldClient` (crear/consultar link, validar firma), webhook `/webhook/bold`, endpoint `/pagar/{slug}/{id}`, sección Bold en `/admin/integraciones`, botón de pago en el recibo, columnas de pago en `inscripciones`. Probada contra la API sandbox (crea link de $1.000 y consulta estado)
 
 ## Siguiente
 
-- [ ] Integración real con Bold (falta documentación y llave de prueba)
+- [ ] Registrar el webhook `https://<dominio>/webhook/bold` en el panel de Bold
 - [ ] Publicar en GoDaddy: subir archivos, crear BD, configurar `.env`
-- [ ] Probar flujo completo en producción: inscripción → pago → comprobante
+- [ ] Probar flujo completo en producción: inscripción → pago → webhook → confirmación
+- [ ] Definir modo produccion: cambiar `bold_ambiente` y cargar las llaves de producción (la llave provista es de pruebas)
 
 ## No bloquea el código
 

@@ -293,11 +293,15 @@ final class RepositorioEventos
             'estado' => (string) $fila['estado'],
             'creado_en' => (string) $fila['creado_en'],
             'comprobante' => (string) ($fila['comprobante'] ?? ''),
-            'evento' => (string) $nombre,
-            'entrada' => json_decode((string) $fila['entrada_json'], true) ?: [],
-            'cotizacion' => json_decode((string) $fila['cotizacion_json'], true) ?: [],
-            'notas' => json_decode((string) $fila['notas_json'], true) ?: [],
-        ];
+                            'evento' => (string) $nombre,
+                            'payment_link' => (string) ($fila['payment_link'] ?? ''),
+                            'payment_status' => (string) ($fila['payment_status'] ?? ''),
+                            'transaction_id' => (string) ($fila['transaction_id'] ?? ''),
+                            'pagado_en' => (string) ($fila['pagado_en'] ?? ''),
+                            'entrada' => json_decode((string) $fila['entrada_json'], true) ?: [],
+                            'cotizacion' => json_decode((string) $fila['cotizacion_json'], true) ?: [],
+                            'notas' => json_decode((string) $fila['notas_json'], true) ?: [],
+                        ];
     }
 
     /**
@@ -397,6 +401,85 @@ final class RepositorioEventos
     private function slugValido(string $slug): bool
     {
         return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug) === 1;
+    }
+
+    /**
+     * @param array<string, mixed> $datos
+     */
+    public function guardarPago(int $idInscripcion, array $datos): bool
+    {
+        if ($idInscripcion < 1) {
+            return false;
+        }
+        $this->asegurarColumnasPago();
+        $db = db_connect();
+        $valores = [];
+        foreach (['payment_link', 'payment_status', 'transaction_id'] as $columna) {
+            if (array_key_exists($columna, $datos)) {
+                $valores[$columna] = (string) $datos[$columna];
+            }
+        }
+        if (array_key_exists('pagado_en', $datos)) {
+            $valores['pagado_en'] = $datos['pagado_en'];
+        }
+        if ($valores === []) {
+            return false;
+        }
+
+        return $db->table('inscripciones')->where('id', $idInscripcion)->update($valores);
+    }
+
+    /**
+     * Busca una inscripción por la referencia externa de Bold.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function buscarPorReferencia(string $referencia): ?array
+    {
+        $fila = db_connect()->table('inscripciones')
+            ->where('payment_link', $referencia)
+            ->get()
+            ->getRowArray();
+
+        return is_array($fila) ? $fila : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function inscripcionPorId(int $id): ?array
+    {
+        $fila = db_connect()->table('inscripciones')
+            ->where('id', $id)
+            ->get()
+            ->getRowArray();
+
+        return is_array($fila) ? $fila : null;
+    }
+
+    /**
+     * Agrega las columnas de pago si faltan (auto-migración).
+     */
+    public function asegurarColumnasPago(): void
+    {
+        $db = db_connect();
+        try {
+            $columnas = $db->query('SHOW COLUMNS FROM inscripciones')->getResultArray();
+        } catch (\Throwable) {
+            return;
+        }
+        $nombres = array_map(static fn ($c) => (string) $c['Field'], $columnas);
+        $faltantes = [
+            'payment_link' => "VARCHAR(60) NULL",
+            'payment_status' => "VARCHAR(30) NULL",
+            'transaction_id' => "VARCHAR(60) NULL",
+            'pagado_en' => "DATETIME NULL",
+        ];
+        foreach ($faltantes as $columna => $definicion) {
+            if (! in_array($columna, $nombres, true)) {
+                $db->query("ALTER TABLE inscripciones ADD COLUMN {$columna} {$definicion}");
+            }
+        }
     }
 
     /**

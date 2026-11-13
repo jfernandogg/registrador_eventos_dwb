@@ -115,10 +115,33 @@ class Inscripcion extends BaseController
             return redirect()->to('/e/' . $slug);
         }
 
+        // Fallback: si hay un link de Bold pendiente, consultar el estado actual.
+        if (($recibo['payment_link'] ?? '') !== '' && ($recibo['payment_status'] ?? '') !== 'PAID') {
+            try {
+                $bold = new \App\Persistencia\BoldClient();
+                if ($bold->configurado()) {
+                    $datos = $bold->consultarLink((string) $recibo['payment_link']);
+                    $estado = (string) ($datos['status'] ?? '');
+                    if ($estado !== '' && $estado !== (string) $recibo['payment_status']) {
+                        $this->eventos->guardarPago((int) $recibo['id'], [
+                            'payment_status' => $estado,
+                            'transaction_id' => (string) ($datos['transaction_id'] ?? ''),
+                            'pagado_en' => $estado === 'PAID' ? date('Y-m-d H:i:s') : null,
+                        ]);
+                        $recibo['payment_status'] = $estado;
+                        $recibo['transaction_id'] = (string) ($datos['transaction_id'] ?? '');
+                    }
+                }
+            } catch (\Throwable) {
+                // Si falla la consulta, dejar el estado guardado.
+            }
+        }
+
         return view('inscripcion/recibo', [
             'recibo' => $recibo,
             'evento' => $recibo['evento'],
             'slug' => $slug,
+            'bold_configurado' => (new \App\Persistencia\BoldClient())->configurado(),
         ]);
     }
 
@@ -128,14 +151,72 @@ class Inscripcion extends BaseController
         if ($programa === null) {
             throw PageNotFoundException::forPageNotFound();
         }
+        if ($id === null || (int) $id < 1) {
+            return redirect()->to('/e/' . $slug);
+        }
 
-        // TODO: Integración Bold — cuando llegue la documentación y la llave de prueba,
-        // generar el URL de pago con el total y redirigir.
-        return view('inscripcion/pagar-placeholder', [
-            'slug' => $slug,
-            'programa' => $programa,
-            'id' => $id,
+        $inscripcion = $this->eventos->inscripcionPorId((int) $id);
+        if (! is_array($inscripcion) || (int) $inscripcion['evento_id'] !== (int) $this->eventos->id($slug)) {
+            return redirect()->to('/e/' . $slug);
+        }
+
+        $bold = new \App\Persistencia\BoldClient();
+        if (! $bold->configurado()) {
+            return view('inscripcion/pagar-placeholder', [
+                'slug' => $slug,
+                'programa' => $programa,
+                'id' => $id,
+            ]);
+        }
+
+        // Si ya hay un link activo que no está pagado, reutilizarlo
+        $linkExistente = (string) ($inscripcion['payment_link'] ?? '');
+        $estado = (string) ($inscripcion['payment_status'] ?? '');
+        if ($linkExistente !== '' && in_array($estado, ['', 'ACTIVE', 'PROCESSING'], true)) {
+            try {
+                $datos = $bold->consultarLink($linkExistente);
+                if (($datos['status'] ?? '') === 'PAID') {
+                    $this->eventos->guardarPago((int) $id, [
+                        'payment_status' => 'PAID',
+                        'transaction_id' => (string) ($datos['transaction_id'] ?? ''),
+                        'pagado_en' => date('Y-m-d H:i:s'),
+                    ]);
+
+                    return redirect()->to('/e/' . $slug . '/recibo/' . $id . '?pagado=1');
+                }
+                if (! empty($datos['url'])) {
+                    return redirect()->to((string) $datos['url']);
+                }
+                return redirect()->to($bold->urlDelLink($linkExistente));
+            } catch (\Throwable) {
+                // Si falla la consulta, crear un link nuevo
+            }
+        }
+
+        try {
+            $link = $bold->crearLink([
+                'reference' => 'INS-' . $id,
+                'amount' => (int) $inscripcion['total'],
+                'description' => mb_substr($programa->nombre, 0, 100),
+                'callback_url' => site_url('e/' . $slug . '/recibo/' . $id . '?pagado=1'),
+                'payer_email' => (string) ($inscripcion['correo'] ?? ''),
+                'expiration_date' => (int) (time() + 3600) * 1000000000,
+            ]);
+        } catch (\Throwable $e) {
+            return view('inscripcion/pagar-placeholder', [
+                'slug' => $slug,
+                'programa' => $programa,
+                'id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $this->eventos->guardarPago((int) $id, [
+            'payment_link' => $link['payment_link'],
+            'payment_status' => 'ACTIVE',
         ]);
+
+        return redirect()->to($link['url']);
     }
 
     /**

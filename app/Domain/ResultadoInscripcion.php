@@ -36,6 +36,7 @@ final class ResultadoInscripcion
             'nombre' => (string) ($this->entrada['nombre'] ?? ''),
             'documento' => (string) ($this->entrada['documento'] ?? ''),
             'forma' => $this->formaPago?->etiqueta ?? '',
+            'forma_codigo' => $this->formaPago?->codigo ?? '',
             'cobra' => $this->formaPago?->cobraEnRegistro ?? false,
             'total' => $this->cotizacion?->total() ?? 0,
             'lineas' => $this->lineasCongeladas,

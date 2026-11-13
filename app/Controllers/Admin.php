@@ -567,12 +567,17 @@ class Admin extends BaseController
             'correo_smtp_cripto' => (string) ($config['correo_smtp_cripto'] ?? $emailConfig->SMTPCrypto),
             'correo_from_email' => (string) ($config['correo_from_email'] ?? $emailConfig->fromEmail),
             'correo_from_nombre' => (string) ($config['correo_from_nombre'] ?? $emailConfig->fromName),
+            'bold_api_key' => (string) ($config['bold_api_key'] ?? ''),
+            'bold_secret_key' => (string) ($config['bold_secret_key'] ?? ''),
+            'bold_ambiente' => (string) ($config['bold_ambiente'] ?? 'sandbox'),
         ];
 
         return view('admin/integraciones', [
             'valores' => $valores,
             'error' => (string) $this->request->getGet('error'),
             'ok' => (string) $this->request->getGet('ok'),
+            'bold_configurado' => (new \App\Persistencia\BoldClient())->configurado(),
+            'bold_sandbox' => (new \App\Persistencia\BoldClient())->esSandbox(),
         ]);
     }
 
@@ -623,6 +628,52 @@ class Admin extends BaseController
         }
 
         return redirect()->to('/admin/integraciones?ok=' . urlencode('Correo de prueba enviado a ' . $destino . '.'));
+    }
+
+    public function guardarBold()
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/integraciones');
+        }
+
+        $post = $this->request->getPost();
+        $valores = [];
+        foreach (\App\Persistencia\RepositorioConfiguracion::clavesBold() as $clave) {
+            $valores[$clave] = trim((string) ($post[$clave] ?? ''));
+        }
+        $valores['bold_ambiente'] = $valores['bold_ambiente'] === 'produccion' ? 'produccion' : 'sandbox';
+
+        (new \App\Persistencia\RepositorioConfiguracion())->guardar($valores);
+
+        return redirect()->to('/admin/integraciones?ok=' . urlencode('Configuración de Bold guardada.'));
+    }
+
+    public function probarBold()
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/integraciones');
+        }
+
+        $bold = new \App\Persistencia\BoldClient();
+        if (! $bold->configurado()) {
+            return redirect()->to('/admin/integraciones?error=' . urlencode('Cargá la llave de identidad de Bold primero.'));
+        }
+
+        try {
+            $link = $bold->crearLink([
+                'reference' => 'PRUEBA-' . time(),
+                'amount' => 1000,
+                'description' => 'Prueba de integración DWB Colombia',
+                'callback_url' => site_url('admin/integraciones?ok=prueba'),
+                'expiration_date' => (int) (time() + 900) * 1000000000,
+            ]);
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/integraciones?error=' . urlencode('Error: ' . $e->getMessage()));
+        }
+
+        return redirect()->to('/admin/integraciones?ok=' . urlencode('Link de prueba creado: ' . $link['url']));
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────

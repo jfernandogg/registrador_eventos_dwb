@@ -11,6 +11,7 @@ $routes->get('e/(:segment)/recibo/(:num)', 'Inscripcion::recibo/$1/$2');
 $routes->addRedirect('tour-365', 'e/tour-365');
 $routes->addRedirect('tour-365/recibo/(:num)', 'e/tour-365/recibo/$1');
 $routes->get('pagar/(:segment)/(:num)', 'Inscripcion::pagar/$1/$2');
+$routes->post('webhook/bold', 'Webhook::bold');
 $routes->get('admin/entrar', 'Admin::entrar');
 $routes->post('admin/entrar', 'Admin::entrar');
 $routes->get('admin/salir', 'Admin::salir');
@@ -35,4 +36,6 @@ $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->get('integraciones', 'Admin::integraciones');
     $routes->post('integraciones/correo', 'Admin::guardarCorreo');
     $routes->post('integraciones/correo/probar', 'Admin::probarCorreo');
+    $routes->post('integraciones/bold', 'Admin::guardarBold');
+    $routes->post('integraciones/bold/probar', 'Admin::probarBold');
 });

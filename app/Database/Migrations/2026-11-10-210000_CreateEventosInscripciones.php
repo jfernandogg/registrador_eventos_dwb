@@ -32,6 +32,10 @@ class CreateEventosInscripciones extends Migration
             'notas_json' => ['type' => 'LONGTEXT'],
             'comprobante' => ['type' => 'VARCHAR', 'constraint' => 120, 'null' => true],
             'documento_activo' => ['type' => 'VARCHAR', 'constraint' => 40, 'null' => true],
+            'payment_link' => ['type' => 'VARCHAR', 'constraint' => 60, 'null' => true],
+            'payment_status' => ['type' => 'VARCHAR', 'constraint' => 30, 'null' => true],
+            'transaction_id' => ['type' => 'VARCHAR', 'constraint' => 60, 'null' => true],
+            'pagado_en' => ['type' => 'DATETIME', 'null' => true],
             'creado_en' => ['type' => 'TIMESTAMP', 'null' => false],
         ]);
         $this->forge->addKey('id', true);

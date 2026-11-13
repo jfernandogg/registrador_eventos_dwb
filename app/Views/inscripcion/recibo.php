@@ -38,6 +38,34 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
     <?php if (($recibo['comprobante'] ?? '') !== ''): ?>
         <p>Comprobante recibido: <?= esc($recibo['comprobante']) ?>.</p>
     <?php endif ?>
+
+    <?php
+    $estadoPago = (string) ($recibo['payment_status'] ?? '');
+    $formaPago = (string) ($recibo['cotizacion']['forma_codigo'] ?? '');
+    if ($formaPago === '') {
+        // Inscripciones guardadas antes de agregar forma_codigo: inferir por etiqueta.
+        $etiqueta = mb_strtolower((string) ($recibo['forma'] ?? ''));
+        $formaPago = str_contains($etiqueta, 'tarjeta') ? 'tarjeta' : '';
+    }
+    $pagado = $estadoPago === 'PAID';
+    ?>
+    <?php if ($pagado): ?>
+        <div class="recibo-nota" style="background: #e8f5e9; border-color: #a5d6a7;">
+            ✅ <strong>Pago confirmado por Bold.</strong>
+            <?php if (($recibo['transaction_id'] ?? '') !== ''): ?>
+                Transacción: <?= esc($recibo['transaction_id']) ?>
+            <?php endif ?>
+        </div>
+    <?php elseif ($estadoPago !== ''): ?>
+        <div class="recibo-nota" style="background: #fff8e1; border-color: #ffe082;">
+            ⏳ <strong>Pago en estado: <?= esc($estadoPago) ?>.</strong> Si acabás de pagar, actualizá la página en unos segundos.
+        </div>
+    <?php endif ?>
+
+    <?php if (!$pagado && ($bold_configurado ?? false) && in_array($formaPago, ['tarjeta', 'tarjeta_credito', 'tarjeta_debito'], true)): ?>
+        <p style="margin-top: 1rem;"><a class="boton-primario" href="<?= site_url('pagar/' . $slug . '/' . $recibo['id']) ?>" style="display: inline-block; text-decoration: none; padding: 0.6rem 1.1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Pagar con Bold →</a></p>
+    <?php endif ?>
+
     <div class="recibo-nota">
         <?= $recibo['cobra'] ? 'Quedó pendiente de confirmación de tesorería.' : 'Esta forma no se cobra en el registro. El total es informativo.' ?>
     </div>

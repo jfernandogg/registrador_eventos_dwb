@@ -19,6 +19,9 @@ final class RepositorioConfiguracion
         'correo_smtp_cripto',
         'correo_from_email',
         'correo_from_nombre',
+        'bold_api_key',
+        'bold_secret_key',
+        'bold_ambiente',
     ];
 
     /** @return array<string, string> */
@@ -88,6 +91,18 @@ final class RepositorioConfiguracion
             'correo_smtp_cripto',
             'correo_from_email',
             'correo_from_nombre',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function clavesBold(): array
+    {
+        return [
+            'bold_api_key',
+            'bold_secret_key',
+            'bold_ambiente',
         ];
     }
 }
