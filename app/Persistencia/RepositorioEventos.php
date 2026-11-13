@@ -484,6 +484,144 @@ final class RepositorioEventos
     }
 
     /**
+     * Asegura la tabla de entradas de webhook (auto-migración). Guarda un
+     * registro por cada notificación recibida para que el responsable pueda
+     * revisar los pagos en el backoffice.
+     */
+    public function asegurarTablaWebhooks(): void
+    {
+        $db = db_connect();
+        try {
+            $db->query(
+                'CREATE TABLE IF NOT EXISTS webhook_entradas (
+                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    proveedor VARCHAR(20) NOT NULL DEFAULT \'bold\',
+                    uuid VARCHAR(64) NULL,
+                    recibido_en DATETIME NOT NULL,
+                    tipo VARCHAR(40) NOT NULL DEFAULT \'\',
+                    payment_id VARCHAR(60) NOT NULL DEFAULT \'\',
+                    payment_link VARCHAR(60) NOT NULL DEFAULT \'\',
+                    referencia VARCHAR(80) NOT NULL DEFAULT \'\',
+                    firma_valida TINYINT(1) NOT NULL DEFAULT 0,
+                    inscripcion_id INT UNSIGNED NULL,
+                    payment_status VARCHAR(30) NOT NULL DEFAULT \'\',
+                    asociada TINYINT(1) NOT NULL DEFAULT 0,
+                    nota VARCHAR(120) NOT NULL DEFAULT \'\',
+                    payload_json MEDIUMTEXT NULL,
+                    UNIQUE KEY uq_webhook_uuid (uuid)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+            );
+        } catch (\Throwable) {
+            // Si ya existe o no se puede crear, se ignora.
+        }
+    }
+
+    /**
+     * Registra una entrada de webhook (idempotente por uuid: si el proveedor
+     * reintenta el mismo evento, se actualiza la entrada existente).
+     *
+     * @param array<string, mixed> $datos
+     */
+    public function guardarWebhook(array $datos): int
+    {
+        $this->asegurarTablaWebhooks();
+        $db = db_connect();
+        $uuid = (string) ($datos['uuid'] ?? '');
+        $db->query(
+            'INSERT INTO webhook_entradas
+                (proveedor, uuid, recibido_en, tipo, payment_id, payment_link, referencia, firma_valida, nota, payload_json)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+                recibido_en = VALUES(recibido_en),
+                tipo = VALUES(tipo),
+                payment_id = VALUES(payment_id),
+                payment_link = VALUES(payment_link),
+                referencia = VALUES(referencia),
+                firma_valida = VALUES(firma_valida),
+                payload_json = VALUES(payload_json)',
+            [
+                (string) ($datos['proveedor'] ?? 'bold'),
+                $uuid === '' ? null : $uuid,
+                (string) ($datos['recibido_en'] ?? date('Y-m-d H:i:s')),
+                (string) ($datos['tipo'] ?? ''),
+                (string) ($datos['payment_id'] ?? ''),
+                (string) ($datos['payment_link'] ?? ''),
+                (string) ($datos['referencia'] ?? ''),
+                (int) ($datos['firma_valida'] ?? 0),
+                (string) ($datos['nota'] ?? ''),
+                (string) ($datos['payload_json'] ?? ''),
+            ]
+        );
+
+        $fila = $uuid === '' ? null : $db->query('SELECT id FROM webhook_entradas WHERE uuid = ?', [$uuid])->getRowArray();
+
+        return $fila ? (int) $fila['id'] : (int) $db->insertID();
+    }
+
+    /**
+     * Completa una entrada de webhook con el resultado del procesamiento.
+     *
+     * @param array<string, mixed> $datos
+     */
+    public function completarWebhook(int $id, array $datos): void
+    {
+        if ($id < 1) {
+            return;
+        }
+        $valores = [];
+        foreach (['asociada', 'inscripcion_id', 'payment_status', 'nota'] as $columna) {
+            if (array_key_exists($columna, $datos)) {
+                $valores[$columna] = $datos[$columna];
+            }
+        }
+        if ($valores === []) {
+            return;
+        }
+        db_connect()->table('webhook_entradas')->where('id', $id)->update($valores);
+    }
+
+    /**
+     * Lista las entradas de webhook para el backoffice.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function webhooks(int $limite = 200): array
+    {
+        $this->asegurarTablaWebhooks();
+        $filas = db_connect()->table('webhook_entradas')
+            ->orderBy('recibido_en', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->limit($limite)
+            ->get()
+            ->getResultArray();
+
+        return array_map(static function (array $fila): array {
+            $fila['payload'] = json_decode((string) ($fila['payload_json'] ?? '[]'), true) ?: [];
+
+            return $fila;
+        }, $filas);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function webhookPorId(int $id): ?array
+    {
+        $this->asegurarTablaWebhooks();
+        $fila = db_connect()->table('webhook_entradas')
+            ->where('id', $id)
+            ->get()
+            ->getRowArray();
+        if (! is_array($fila)) {
+            return null;
+        }
+        $fila['payload'] = json_decode((string) ($fila['payload_json'] ?? '[]'), true) ?: [];
+        unset($fila['payload_json']);
+
+        return $fila;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function exportarDatos(string $slug): array

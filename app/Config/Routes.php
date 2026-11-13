@@ -39,4 +39,6 @@ $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->post('integraciones/correo/probar', 'Admin::probarCorreo');
     $routes->post('integraciones/bold', 'Admin::guardarBold');
     $routes->post('integraciones/bold/probar', 'Admin::probarBold');
+    $routes->get('webhooks', 'Admin::webhooks');
+    $routes->get('webhooks/(:num)', 'Admin::detalleWebhook/$1');
 });

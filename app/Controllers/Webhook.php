@@ -22,75 +22,96 @@ final class Webhook extends BaseController
         $firma = (string) $this->request->getHeaderLine('x-bold-signature');
 
         $bold = new BoldClient();
-        if (! $bold->configurado()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Bold no configurado']);
-        }
-        if (! $bold->validarFirma($cuerpo, $firma)) {
-            log_message('warning', 'Webhook Bold: firma inválida');
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Firma inválida']);
-        }
+        $repositorio = new RepositorioEventos();
+        $repositorio->asegurarTablaWebhooks();
 
         $evento = json_decode($cuerpo, true);
-        if (! is_array($evento)) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'JSON inválido']);
-        }
-
-        $tipo = (string) ($evento['type'] ?? '');
-        $datos = (array) ($evento['data'] ?? []);
-        $referencia = (string) ($datos['metadata']['reference'] ?? '');
+        $datos = is_array($evento) ? (array) ($evento['data'] ?? []) : [];
+        $tipo = is_array($evento) ? (string) ($evento['type'] ?? '') : '';
         $paymentId = (string) ($datos['payment_id'] ?? '');
         $link = (string) ($datos['payment_link'] ?? '');
+        $referencia = (string) ($datos['metadata']['reference'] ?? '');
+        $uuid = is_array($evento) ? (string) ($evento['uuid'] ?? '') : '';
 
-        if ($referencia === '' && $link === '') {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Sin referencia']);
-        }
+        $firmaValida = $bold->configurado() && $bold->validarFirma($cuerpo, $firma);
 
-        $repositorio = new RepositorioEventos();
-        $inscripcion = null;
+        // Registra la notificación (no se pierde aunque falle el procesamiento).
+        $idEntrada = $repositorio->guardarWebhook([
+            'proveedor' => 'bold',
+            'uuid' => $uuid,
+            'tipo' => $tipo,
+            'payment_id' => $paymentId,
+            'payment_link' => $link,
+            'referencia' => $referencia,
+            'firma_valida' => (int) $firmaValida,
+            'payload_json' => $cuerpo,
+        ]);
 
-        // 1) Lo más fiable: el LNK (payment_link) coincide exactamente con la columna.
-        if ($link !== '') {
-            $inscripcion = $repositorio->buscarPorReferencia($link);
-        }
-        // 2) Fallback: referencia interna INS-{id}.
-        if (! is_array($inscripcion) && $referencia !== '') {
-            if (str_starts_with($referencia, 'INS-')) {
-                $idRef = (int) substr($referencia, 4);
-                if ($idRef > 0) {
-                    $inscripcion = $repositorio->inscripcionPorId($idRef);
+        $asociada = false;
+        $nota = '';
+        $estadoPago = null;
+        $inscripcionId = null;
+
+        if (! $firmaValida) {
+            $nota = 'Firma inválida, notificación ignorada';
+        } elseif (! is_array($evento)) {
+            $nota = 'JSON inválido';
+        } elseif ($referencia === '' && $link === '') {
+            $nota = 'Sin referencia';
+        } else {
+            $inscripcion = null;
+
+            // 1) Lo más fiable: el LNK (payment_link) coincide exactamente con la columna.
+            if ($link !== '') {
+                $inscripcion = $repositorio->buscarPorReferencia($link);
+            }
+            // 2) Fallback: referencia interna INS-{id}.
+            if (! is_array($inscripcion) && $referencia !== '') {
+                if (str_starts_with($referencia, 'INS-')) {
+                    $idRef = (int) substr($referencia, 4);
+                    if ($idRef > 0) {
+                        $inscripcion = $repositorio->inscripcionPorId($idRef);
+                    }
+                } else {
+                    $inscripcion = $repositorio->buscarPorReferencia($referencia);
                 }
+            }
+
+            if (! is_array($inscripcion)) {
+                $nota = 'No asociada: aún no existe una inscripción con ese link/referencia';
             } else {
-                $inscripcion = $repositorio->buscarPorReferencia($referencia);
+                $inscripcionId = (int) $inscripcion['id'];
+                $estado = match ($tipo) {
+                    'SALE_APPROVED' => 'PAID',
+                    'SALE_REJECTED' => 'REJECTED',
+                    'VOID_APPROVED' => 'CANCELLED',
+                    'VOID_REJECTED' => 'CANCELLED',
+                    default => null,
+                };
+
+                if ($estado === null) {
+                    $nota = 'Tipo de evento sin mapeo: ' . $tipo;
+                } else {
+                    $repositorio->guardarPago($inscripcionId, [
+                        'payment_status' => $estado,
+                        'transaction_id' => $paymentId,
+                        'payment_link' => $link !== '' ? $link : (string) ($inscripcion['payment_link'] ?? ''),
+                        'pagado_en' => $estado === 'PAID' ? date('Y-m-d H:i:s') : null,
+                    ]);
+                    $estadoPago = $estado;
+                    $asociada = true;
+                    $nota = 'Asociada y actualizada a ' . $estado;
+                }
             }
         }
 
-        if (! is_array($inscripcion)) {
-            // Bold puede enviar la notificación antes de que guardemos el link.
-            // Responder 200 para que no reintente, y quedará como no asociada.
-            log_message('info', 'Webhook Bold: inscripción no encontrada para ref=' . $referencia . ' link=' . $link);
-            return $this->response->setStatusCode(200)->setJSON(['ok' => true, 'asociada' => false]);
-        }
-
-        $estado = match ($tipo) {
-            'SALE_APPROVED' => 'PAID',
-            'SALE_REJECTED' => 'REJECTED',
-            'VOID_APPROVED' => 'CANCELLED',
-            'VOID_REJECTED' => 'CANCELLED',
-            default => null,
-        };
-        if ($estado === null) {
-            return $this->response->setStatusCode(200)->setJSON(['ok' => true]);
-        }
-
-        $repositorio->guardarPago((int) $inscripcion['id'], [
-            'payment_status' => $estado,
-            'transaction_id' => $paymentId,
-            'payment_link' => $link !== '' ? $link : (string) ($inscripcion['payment_link'] ?? ''),
-            'pagado_en' => $estado === 'PAID' ? date('Y-m-d H:i:s') : null,
+        $repositorio->completarWebhook($idEntrada, [
+            'asociada' => (int) $asociada,
+            'inscripcion_id' => $inscripcionId,
+            'payment_status' => (string) ($estadoPago ?? ''),
+            'nota' => $nota,
         ]);
 
-        log_message('info', 'Webhook Bold: inscripción ' . $inscripcion['id'] . ' → ' . $estado);
-
-        return $this->response->setStatusCode(200)->setJSON(['ok' => true, 'asociada' => true]);
+        return $this->response->setStatusCode(200)->setJSON(['ok' => true, 'asociada' => $asociada]);
     }
 }

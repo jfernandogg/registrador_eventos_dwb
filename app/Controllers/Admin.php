@@ -58,6 +58,21 @@ class Admin extends BaseController
         return view('admin/eventos', ['eventos' => $this->eventos->publicados()]);
     }
 
+    public function webhooks()
+    {
+        return view('admin/webhooks', ['webhooks' => $this->eventos->webhooks()]);
+    }
+
+    public function detalleWebhook($id = null)
+    {
+        $detalle = $this->eventos->webhookPorId((int) $id);
+        if ($detalle === null) {
+            return redirect()->to('/admin/webhooks');
+        }
+
+        return view('admin/webhook-detalle', ['webhook' => $detalle]);
+    }
+
     public function inscritos(string $slug)
     {
         if ($this->eventos->datos($slug) === null) {
