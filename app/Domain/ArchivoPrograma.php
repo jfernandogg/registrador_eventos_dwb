@@ -85,6 +85,9 @@ final class ArchivoPrograma
                 static fn (DefinicionCampo $campo): array => $campo->exportar(),
                 $programa->ficha,
             ),
+            'cuenta_bancaria' => $programa->cuentaBancaria,
+            'breb' => $programa->breb,
+            'bold_url' => $programa->boldUrl,
         ];
     }
 
@@ -166,6 +169,9 @@ final class ArchivoPrograma
             is_array($datos['alojamientos'] ?? null) ? $datos['alojamientos'] : [],
             self::ficha($datos['ficha'] ?? []),
             (string) ($datos['descripcion'] ?? ''),
+            (string) ($datos['cuenta_bancaria'] ?? ''),
+            (string) ($datos['breb'] ?? ''),
+            (string) ($datos['bold_url'] ?? ''),
         );
     }
 

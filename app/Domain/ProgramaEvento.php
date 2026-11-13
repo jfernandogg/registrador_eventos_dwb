@@ -36,6 +36,9 @@ final class ProgramaEvento
         /** @var list<DefinicionCampo> */
         public readonly array $ficha = [],
         public readonly string $descripcion = '',
+        public readonly string $cuentaBancaria = '',
+        public readonly string $breb = '',
+        public readonly string $boldUrl = '',
     ) {
     }
 

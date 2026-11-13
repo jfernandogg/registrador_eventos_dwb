@@ -285,6 +285,19 @@ $conteos = [
             </table>
             <p class="ayuda">La etiqueta es la opción del participante. Comprobante en Sí solo tiene sentido si también cobra aquí.</p>
             <button type="button" class="boton claro" data-agregar="pagos-filas">Agregar forma de pago</button>
+
+            <label class="campo" style="margin-top: 1rem;">Datos de cuenta bancaria
+                <textarea name="cuenta_bancaria" placeholder="Banco: Bancolombia&#10;Tipo: Cuenta de ahorros&#10;Número: 123-456789-00&#10;Titular: Budismo Camino del Diamante"><?= $texto('cuenta_bancaria') ?></textarea>
+                <p class="ayuda">Se muestra cuando el participante elige transferencia. Dejalo vacío si no aplica.</p>
+            </label>
+            <label class="campo">Clave Bre-b
+                <input name="breb" value="<?= $texto('breb') ?>" placeholder="Ej: 900123456">
+                <p class="ayuda">Llave Bre-b de Bancolombia para transferencias simplificadas. Se muestra junto a los datos bancarios.</p>
+            </label>
+            <label class="campo">URL base de Bold (opcional — integración pendiente)
+                <input name="bold_url" value="<?= $texto('bold_url') ?>" placeholder="https://...">
+                <p class="ayuda">Si se configura, al elegir tarjeta aparece un enlace de pago Bold. Se interpolará {{total}} con el monto.</p>
+            </label>
         </section>
 
         <section class="panel" id="equipos">

@@ -211,6 +211,7 @@ $cursosElegidos = array_values(array_filter(
         </select>
         <?= $error('forma_pago') ?>
     </label>
+    <div id="instrucciones-pago"></div>
     <div id="bloque-comprobante" class="depende<?= in_array($valor('forma_pago'), ['transferencia', 'tarjeta'], true) ? '' : ' si-oculto' ?>">
     <label>Comprobante, solo si pagas por transferencia o tarjeta solas
         <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png" id="input-comprobante">
@@ -232,6 +233,65 @@ $cursosElegidos = array_values(array_filter(
         <button class="boton-primario" type="submit" name="accion" value="confirmar">Terminar inscripción</button>
     </div>
     <?= form_close() ?>
+    <script>
+    (function(){
+        var CUENTA = <?= json_encode($programa->cuentaBancaria) ?>;
+        var BREB = <?= json_encode($programa->breb) ?>;
+        var BOLD_URL = <?= json_encode($programa->boldUrl) ?>;
+        var SLUG = <?= json_encode($slug) ?>;
+        var formaPago = document.querySelector('select[name="forma_pago"]');
+        var instrucciones = document.getElementById('instrucciones-pago');
+
+        function mostrar() {
+            var v = formaPago.value;
+            if (!v || v === 'sitio' || v === 'ruta_budista') {
+                instrucciones.innerHTML = '';
+                return;
+            }
+
+            var html = '';
+            if (v === 'transferencia') {
+                html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
+                if (CUENTA) {
+                    html += '<p style="font-weight: 650; margin-bottom: 0.3rem;">Datos para transferencia:</p>';
+                    html += '<p style="white-space: pre-line; font-size: 0.88rem; margin: 0 0 0.4rem;">' + escapeHtml(CUENTA) + '</p>';
+                }
+                if (BREB) {
+                    html += '<p style="font-size: 0.88rem; margin: 0 0 0.4rem;">Clave Bre-b: <strong>' + escapeHtml(BREB) + '</strong></p>';
+                }
+                html += '<p class="ayuda" style="margin: 0;">Consigná el total y después subí el comprobante abajo.</p>';
+                html += '</div>';
+            } else if (v === 'tarjeta') {
+                if (BOLD_URL) {
+                    html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
+                    html += '<p style="font-weight: 650; margin-bottom: 0.3rem;">Pago con tarjeta (Bold):</p>';
+                    html += '<p style="font-size: 0.88rem; margin: 0 0 0.5rem;">Hacé click en el enlace de abajo para pagar con tarjeta. El monto se toma del total de tu inscripción.</p>';
+                    html += '<a class="boton-primario" href="' + escapeHtml(BOLD_URL) + '" target="_blank" rel="noopener" style="display: inline-block; text-decoration: none; padding: 0.5rem 1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Ir a pagar con Bold</a>';
+                    html += '<p class="ayuda" style="margin: 0.5rem 0 0;">Después de pagar, volvé y subí el comprobante abajo.</p>';
+                    html += '</div>';
+                } else {
+                    html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
+                    html += '<p style="font-size: 0.88rem; margin: 0;">Pagá con tarjeta y después subí el comprobante abajo.</p>';
+                    html += '</div>';
+                }
+            } else {
+                html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
+                html += '<p style="font-size: 0.88rem; margin: 0;">Pagás en el sitio. Si querés, subí un comprobante abajo.</p>';
+                html += '</div>';
+            }
+            instrucciones.innerHTML = html;
+        }
+
+        function escapeHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        formaPago.addEventListener('change', mostrar);
+        mostrar();
+    })();
+    </script>
     <script src="<?= base_url('js/inscripcion.js') ?>"></script>
 </main>
 </body>

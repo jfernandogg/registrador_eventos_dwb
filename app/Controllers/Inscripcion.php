@@ -120,6 +120,22 @@ class Inscripcion extends BaseController
         ]);
     }
 
+    public function pagar(string $slug, $id = null)
+    {
+        $programa = $this->programa($slug);
+        if ($programa === null) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        // TODO: Integración Bold — cuando llegue la documentación y la llave de prueba,
+        // generar el URL de pago con el total y redirigir.
+        return view('inscripcion/pagar-placeholder', [
+            'slug' => $slug,
+            'programa' => $programa,
+            'id' => $id,
+        ]);
+    }
+
     /**
      * @return array{nombre: ?string, error: ?string}
      */
