@@ -23,10 +23,11 @@ Estado al 13 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 - [x] Integración con correo: invitaciones + notificación de inscripción (Mailpit en dev)
 - [x] Build de producción (`composer install --no-dev`) + guía de despliegue `DESPLIEGUE.md`
 - [x] Integración Bold por **API Link de pagos**: `BoldClient` (crear/consultar link, validar firma), webhook `/webhook/bold`, endpoint `/pagar/{slug}/{id}`, sección Bold en `/admin/integraciones`, botón de pago en el recibo, columnas de pago en `inscripciones`. Probada contra la API sandbox (crea link de $1.000 y consulta estado)
+- [x] Generación del link de pago por AJAX en el formulario (`POST /e/{slug}/link-pago`, `target=_blank`): el participante genera el enlace, paga, baja el comprobante y lo sube antes de terminar. Resuelve el círculo de tarjeta (cobra + pide comprobante). Dato de prueba: inscripción N° 6 (`88888777`, total 88.000) guardada con `payment_link` + `ACTIVE` + comprobante
 
 ## Siguiente
 
-- [ ] Registrar el webhook `https://<dominio>/webhook/bold` en el panel de Bold
+- [ ] Al terminar una inscripción con éxito, el formulario pasa a **solo lectura** (campos deshabilitados) y el botón *Terminar inscripción* se reemplaza por **Nueva inscripción** (inicia en blanco)
 - [ ] Publicar en GoDaddy: subir archivos, crear BD, configurar `.env`
 - [ ] Probar flujo completo en producción: inscripción → pago → webhook → confirmación
 - [ ] Definir modo produccion: cambiar `bold_ambiente` y cargar las llaves de producción (la llave provista es de pruebas)
