@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use App\BaseController;
 use App\Persistencia\BoldClient;
 use App\Persistencia\RepositorioEventos;
 
@@ -47,11 +46,28 @@ final class Webhook extends BaseController
         }
 
         $repositorio = new RepositorioEventos();
-        $inscripcion = $repositorio->buscarPorReferencia($referencia !== '' ? $referencia : $link);
+        $inscripcion = null;
+
+        // 1) Lo más fiable: el LNK (payment_link) coincide exactamente con la columna.
+        if ($link !== '') {
+            $inscripcion = $repositorio->buscarPorReferencia($link);
+        }
+        // 2) Fallback: referencia interna INS-{id}.
+        if (! is_array($inscripcion) && $referencia !== '') {
+            if (str_starts_with($referencia, 'INS-')) {
+                $idRef = (int) substr($referencia, 4);
+                if ($idRef > 0) {
+                    $inscripcion = $repositorio->inscripcionPorId($idRef);
+                }
+            } else {
+                $inscripcion = $repositorio->buscarPorReferencia($referencia);
+            }
+        }
+
         if (! is_array($inscripcion)) {
             // Bold puede enviar la notificación antes de que guardemos el link.
             // Responder 200 para que no reintente, y quedará como no asociada.
-            log_message('info', 'Webhook Bold: inscripción no encontrada para ' . $referencia);
+            log_message('info', 'Webhook Bold: inscripción no encontrada para ref=' . $referencia . ' link=' . $link);
             return $this->response->setStatusCode(200)->setJSON(['ok' => true, 'asociada' => false]);
         }
 

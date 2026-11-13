@@ -408,10 +408,10 @@ final class RepositorioEventos
      */
     public function guardarPago(int $idInscripcion, array $datos): bool
     {
+        $this->asegurarColumnasPago();
         if ($idInscripcion < 1) {
             return false;
         }
-        $this->asegurarColumnasPago();
         $db = db_connect();
         $valores = [];
         foreach (['payment_link', 'payment_status', 'transaction_id'] as $columna) {
@@ -436,6 +436,7 @@ final class RepositorioEventos
      */
     public function buscarPorReferencia(string $referencia): ?array
     {
+        $this->asegurarColumnasPago();
         $fila = db_connect()->table('inscripciones')
             ->where('payment_link', $referencia)
             ->get()
