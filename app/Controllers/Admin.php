@@ -393,7 +393,38 @@ class Admin extends BaseController
 
         $enlace = site_url('admin/aceptar-invitacion?token=' . $token);
 
+        // Enviar invitación por correo
+        $this->enviarInvitacion($correo, $nombre, $enlace);
+
         return redirect()->to('/admin/usuarios?ok=' . urlencode('Usuario creado. Enlace de invitación: ' . $enlace));
+    }
+
+    private function enviarInvitacion(string $correo, string $nombre, string $enlace): bool
+    {
+        try {
+            $email = \Config\Services::email();
+            $email->setFrom('no-reply@dwb.local', 'DWB Colombia');
+            $email->setTo($correo);
+            $email->setSubject('Invitación para el backoffice de DWB Colombia');
+            $email->setMessage(
+                "Hola {$nombre},\n\n" .
+                "Te invitaron al backoffice de Budismo Camino del Diamante Colombia.\n\n" .
+                "Para activar tu cuenta y elegir tu clave, hacé click en este enlace:\n\n" .
+                "{$enlace}\n\n" .
+                "El enlace vence en 7 días.\n\n" .
+                "Si no esperabas esta invitación, ignorá este correo.\n\n" .
+                "— DWB Colombia"
+            );
+            if (! $email->send(false)) {
+                log_message('error', 'No se pudo enviar la invitación a ' . $correo . ': ' . $email->printDebugger());
+            }
+
+            return true;
+        } catch (\Throwable $e) {
+            log_message('error', 'Error enviando invitación: ' . $e->getMessage());
+
+            return false;
+        }
     }
 
     public function cambiarRol($id = null)

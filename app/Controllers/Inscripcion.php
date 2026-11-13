@@ -99,6 +99,8 @@ class Inscripcion extends BaseController
             } elseif ($guardadoDb['estado'] !== 'guardada') {
                 $errores[$claveDocumento] = 'No se pudo guardar la inscripción. Intenta de nuevo.';
             } else {
+                $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
+
                 return redirect()->to('/e/' . $slug . '/recibo/' . $guardadoDb['id']);
             }
         }
@@ -139,6 +141,38 @@ class Inscripcion extends BaseController
     /**
      * @return array{nombre: ?string, error: ?string}
      */
+    private function notificarInscripcion(string $slug, array $recibo, array $entrada, \App\Domain\ProgramaEvento $programa, int $idInscripcion): void
+    {
+        try {
+            $correoCampo = $programa->claveConRol('correo') ?? 'correo';
+            $correo = trim((string) ($entrada[$correoCampo] ?? ''));
+            if ($correo === '' || ! filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                return;
+            }
+
+            $nombre = trim((string) ($programa->valorRol($entrada, 'nombre') ?: $recibo['nombre'] ?? ''));
+            $total = (int) ($recibo['total'] ?? 0);
+            $enlaceRecibo = site_url('e/' . $slug . '/recibo/' . $idInscripcion);
+
+            $email = \Config\Services::email();
+            $email->setFrom('no-reply@dwb.local', 'DWB Colombia');
+            $email->setTo($correo);
+            $email->setSubject('Inscripción confirmada — ' . $programa->nombre);
+            $email->setMessage(
+                "Hola {$nombre},\n\n" .
+                "Tu inscripción a \"{$programa->nombre}\" está confirmada.\n\n" .
+                "Total: $ " . number_format($total, 0, ',', '.') . "\n" .
+                "Ver tu recibo: {$enlaceRecibo}\n\n" .
+                "— DWB Colombia"
+            );
+            if (! $email->send(false)) {
+                log_message('error', 'No se pudo enviar la notificación de inscripción a ' . $correo);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Error enviando notificación de inscripción: ' . $e->getMessage());
+        }
+    }
+
     private function guardarComprobante(?\CodeIgniter\HTTP\Files\UploadedFile $archivo, string $documento): array
     {
         if ($archivo === null || $archivo->getError() === UPLOAD_ERR_NO_FILE) {
