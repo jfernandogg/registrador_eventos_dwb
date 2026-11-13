@@ -30,7 +30,6 @@ final class EditorEvento
             ],
             'cuenta_bancaria' => '',
             'breb' => '',
-            'bold_url' => '',
             'equipos' => [],
             'tipos_documento' => [
                 'CC' => 'CC',
@@ -285,7 +284,6 @@ final class EditorEvento
             'ficha' => $ficha,
             'cuenta_bancaria' => trim((string) ($post['cuenta_bancaria'] ?? '')),
             'breb' => trim((string) ($post['breb'] ?? '')),
-            'bold_url' => trim((string) ($post['bold_url'] ?? '')),
         ];
         if ($datos['nombre'] === '') {
             $errores[] = 'Escribe el nombre del evento.';
@@ -340,7 +338,6 @@ final class EditorEvento
             'alojamiento' => [],
             'cuenta_bancaria' => (string) ($datos['cuenta_bancaria'] ?? ''),
             'breb' => (string) ($datos['breb'] ?? ''),
-            'bold_url' => (string) ($datos['bold_url'] ?? ''),
         ];
         foreach (['curso_codigo', 'curso_nombre', 'curso_tarifa', 'curso_inicio', 'curso_fin', 'comida_id', 'comida_curso', 'comida_etiqueta', 'franja_id', 'franja_curso', 'franja_sentido', 'franja_etiqueta', 'sesion_curso', 'sesion_id', 'sesion_titulo', 'sesion_tipo', 'sesion_inicio', 'sesion_fin', 'sesion_costo', 'pago_codigo', 'pago_etiqueta', 'pago_cobra', 'pago_comprobante', 'equipo_codigo', 'equipo_etiqueta', 'equipo_curso', 'campo_clave', 'campo_etiqueta', 'campo_tipo', 'campo_requerido', 'campo_opciones', 'campo_visible', 'campo_rol', 'campo_mensaje', 'campo_padre'] as $clave) {
             $post[$clave] = [];

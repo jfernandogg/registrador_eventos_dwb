@@ -38,7 +38,6 @@ final class ProgramaEvento
         public readonly string $descripcion = '',
         public readonly string $cuentaBancaria = '',
         public readonly string $breb = '',
-        public readonly string $boldUrl = '',
     ) {
     }
 

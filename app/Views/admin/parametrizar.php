@@ -294,10 +294,11 @@ $conteos = [
                 <input name="breb" value="<?= $texto('breb') ?>" placeholder="Ej: 900123456">
                 <p class="ayuda">Llave Bre-b de Bancolombia para transferencias simplificadas. Se muestra junto a los datos bancarios.</p>
             </label>
-            <label class="campo">URL base de Bold (opcional — integración pendiente)
-                <input name="bold_url" value="<?= $texto('bold_url') ?>" placeholder="https://...">
-                <p class="ayuda">Si se configura, al elegir tarjeta aparece un enlace de pago Bold. Se interpolará {{total}} con el monto.</p>
-            </label>
+            <div class="campo" style="margin-top: 1rem;">
+                <strong>Pago con tarjeta (Bold)</strong>
+                <p class="ayuda" style="margin-top: 0.35rem;">Los pagos con tarjeta usan la pasarela <strong>Bold</strong>: el servidor genera el link con el monto exacto y el participante paga desde el recibo. La integración (llave de identidad, llave secreta y ambiente) se configura en la página <a href="<?= site_url('admin/integraciones') ?>">Integraciones</a>.</p>
+                <p class="ayuda" style="margin-top: 0.3rem;">Habilitá una forma de pago con el código <code>tarjeta</code> para activarla en ese evento.</p>
+            </div>
         </section>
 
         <section class="panel" id="equipos">

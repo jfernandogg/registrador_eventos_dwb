@@ -87,7 +87,6 @@ final class ArchivoPrograma
             ),
             'cuenta_bancaria' => $programa->cuentaBancaria,
             'breb' => $programa->breb,
-            'bold_url' => $programa->boldUrl,
         ];
     }
 
@@ -171,7 +170,6 @@ final class ArchivoPrograma
             (string) ($datos['descripcion'] ?? ''),
             (string) ($datos['cuenta_bancaria'] ?? ''),
             (string) ($datos['breb'] ?? ''),
-            (string) ($datos['bold_url'] ?? ''),
         );
     }
 

@@ -237,7 +237,6 @@ $cursosElegidos = array_values(array_filter(
     (function(){
         var CUENTA = <?= json_encode($programa->cuentaBancaria) ?>;
         var BREB = <?= json_encode($programa->breb) ?>;
-        var BOLD_URL = <?= json_encode($programa->boldUrl) ?>;
         var SLUG = <?= json_encode($slug) ?>;
         var formaPago = document.querySelector('select[name="forma_pago"]');
         var instrucciones = document.getElementById('instrucciones-pago');
@@ -262,18 +261,10 @@ $cursosElegidos = array_values(array_filter(
                 html += '<p class="ayuda" style="margin: 0;">Consigná el total y después subí el comprobante abajo.</p>';
                 html += '</div>';
             } else if (v === 'tarjeta') {
-                if (BOLD_URL) {
-                    html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
-                    html += '<p style="font-weight: 650; margin-bottom: 0.3rem;">Pago con tarjeta (Bold):</p>';
-                    html += '<p style="font-size: 0.88rem; margin: 0 0 0.5rem;">Hacé click en el enlace de abajo para pagar con tarjeta. El monto se toma del total de tu inscripción.</p>';
-                    html += '<a class="boton-primario" href="' + escapeHtml(BOLD_URL) + '" target="_blank" rel="noopener" style="display: inline-block; text-decoration: none; padding: 0.5rem 1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Ir a pagar con Bold</a>';
-                    html += '<p class="ayuda" style="margin: 0.5rem 0 0;">Después de pagar, volvé y subí el comprobante abajo.</p>';
-                    html += '</div>';
-                } else {
-                    html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
-                    html += '<p style="font-size: 0.88rem; margin: 0;">Pagá con tarjeta y después subí el comprobante abajo.</p>';
-                    html += '</div>';
-                }
+                html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
+                html += '<p style="font-weight: 650; margin-bottom: 0.3rem;">Pago con tarjeta:</p>';
+                html += '<p style="font-size: 0.88rem; margin: 0;">Elegiste pago con tarjeta. Al confirmar la inscripción vas a recibir un enlace para completar el pago en la pasarela.</p>';
+                html += '</div>';
             } else {
                 html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
                 html += '<p style="font-size: 0.88rem; margin: 0;">Pagás en el sitio. Si querés, subí un comprobante abajo.</p>';
