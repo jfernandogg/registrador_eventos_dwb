@@ -319,6 +319,24 @@ $cursosElegidos = array_values(array_filter(
             return d.innerHTML;
         }
 
+        // Evita el doble envío de "Terminar inscripción": marca el form y
+        // deshabilita los botones tras el primer submit de confirmación.
+        var btnTerminar = form.querySelector('button[name="accion"][value="confirmar"]');
+        form.addEventListener('submit', function (evento) {
+            var disparador = document.activeElement;
+            var esConfirmar = disparador && disparador.name === 'accion' && disparador.value === 'confirmar';
+            if (!esConfirmar) {
+                return; // "Ver total" sí vuelve a enviar (recalcula sin confirmar)
+            }
+            if (form.dataset.enviando === '1') {
+                evento.preventDefault(); // segundo envío del mismo form → no repetir
+                return;
+            }
+            form.dataset.enviando = '1';
+            form.querySelectorAll('.acciones button').forEach(function (b) { b.disabled = true; });
+            btnTerminar.textContent = 'Enviando…';
+        });
+
         btnLink.addEventListener('click', generarLink);
         formaPago.addEventListener('change', mostrar);
         mostrar();
