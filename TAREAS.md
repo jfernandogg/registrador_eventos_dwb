@@ -27,7 +27,7 @@ Estado al 13 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 
 ## Siguiente
 
-- [ ] Al terminar una inscripción con éxito, el formulario pasa a **solo lectura** (campos deshabilitados) y el botón *Terminar inscripción* se reemplaza por **Nueva inscripción** (inicia en blanco)
+- [ ] Reparar/verificar el fin de inscripción: tras el éxito debe **redirigir al recibo** (`/e/{slug}/recibo/{id}`). Con un documento ya inscrito no redirige (queda en el formulario con el error de duplicado), que es lo esperado; confirmar que con documento nuevo e inscripción guardada el flujo vaya al recibo.
 - [ ] Publicar en GoDaddy: subir archivos, crear BD, configurar `.env`
 - [ ] Probar flujo completo en producción: inscripción → pago → webhook → confirmación
 - [ ] Definir modo produccion: cambiar `bold_ambiente` y cargar las llaves de producción (la llave provista es de pruebas)
