@@ -230,12 +230,9 @@
             avisos.scrollIntoView({ behavior: 'smooth', block: 'start' });
             return;
         }
-        const totalTexto = totalMonto.textContent.trim() || '—';
-        const nombreEvento = form.dataset.evento || 'este evento';
-        const seguro = confirm(`Vas a inscribirte en ${nombreEvento}. Total: ${totalTexto}. ¿Confirmás?`);
-        if (!seguro) {
-            evento.preventDefault();
-        }
+        // Sin diálogo nativo: al pasar la validación el envío procede. El total
+        // y el destino se muestran en la propia pantalla; el servidor confirma
+        // (recibo) o devuelve el formulario con los campos en rojo.
     });
 
     const archivoInput = document.getElementById('input-comprobante');

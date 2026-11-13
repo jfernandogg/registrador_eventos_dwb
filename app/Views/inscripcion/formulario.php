@@ -67,6 +67,12 @@ $cursosElegidos = array_values(array_filter(
         <strong>Revisa estos datos antes de continuar:</strong>
         <ul id="avisos-lista"></ul>
     </div>
+    <?php if ($errores !== []): ?>
+        <div class="avisos" style="border-color: #be0f34;">
+            <strong>La inscripción no se guardó.</strong>
+            <p style="margin: 0.3rem 0 0;">Revisá los campos marcados en rojo y volvé a enviar. El comprobante que ya subiste se conserva.</p>
+        </div>
+    <?php endif; ?>
     <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar'), 'data-link-pago' => site_url('e/' . $slug . '/link-pago'), 'data-evento' => esc($programa->nombre)]) ?>
 
     <h2>Tus datos</h2>
