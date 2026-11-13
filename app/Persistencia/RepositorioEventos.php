@@ -71,6 +71,7 @@ final class RepositorioEventos
                                 'slug' => (string) $fila['slug'],
                                 'nombre' => (string) $fila['nombre'],
                                 'descripcion' => is_array($programa) ? (string) ($programa['descripcion'] ?? '') : '',
+                                'imagen' => is_array($programa) ? (string) ($programa['imagen'] ?? '') : '',
                             ];
                         },
                         $filas,

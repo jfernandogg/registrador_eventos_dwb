@@ -83,7 +83,7 @@ $conteos = [
                 <ul><?php foreach ($errores as $error): ?><li><?= esc($error) ?></li><?php endforeach ?></ul>
             </div>
         <?php endif ?>
-        <?= form_open($nuevo ? '/admin/eventos' : '/admin/eventos/' . $slug, ['id' => 'editor']) ?>
+        <?= form_open($nuevo ? '/admin/eventos' : '/admin/eventos/' . $slug, ['id' => 'editor', 'enctype' => 'multipart/form-data']) ?>
 
         <section class="panel" id="identidad">
             <h2>Identidad y precios</h2>
@@ -107,6 +107,13 @@ $conteos = [
                 <label class="campo">Descripción del evento
                     <textarea name="descripcion" placeholder="Fechas, lugar, breve descripción. Aparece en la portada pública."><?= $texto('descripcion') ?></textarea>
                     <p class="ayuda">Texto corto para la tarjeta del evento en la portada. Menos de 200 caracteres.</p>
+                </label>
+                <label class="campo">Imagen del evento
+                    <?php if (($post['imagen'] ?? '') !== ''): ?>
+                        <img src="<?= esc((string) $post['imagen']) ?>" alt="" style="max-width: 200px; display: block; margin-bottom: 0.5rem; border-radius: var(--radio);">
+                    <?php endif ?>
+                    <input type="file" name="imagen" accept="image/jpeg,image/png,image/webp">
+                    <p class="ayuda">JPG, PNG o WebP. Máximo 2 MB. Aparece en la portada como tarjeta del evento. Si no subís una nueva, se conserva la actual.</p>
                 </label>
                 <label class="campo">Precio de cada comida
                     <input name="precio_comida" inputmode="numeric" value="<?= $texto('precio_comida') ?>">

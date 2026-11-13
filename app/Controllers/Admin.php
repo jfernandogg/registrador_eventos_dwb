@@ -175,6 +175,15 @@ class Admin extends BaseController
         $datos = $this->eventos->datos($slug) ?? [];
         $resultado = EditorEvento::desdeFormulario($this->request->getPost() ?? [], $datos);
         if ($resultado['errores'] === []) {
+            // Procesar imagen subida
+            $imagenAnterior = (string) ($datos['imagen'] ?? '');
+            $nuevaImagen = $this->guardarImagenEvento($slug, $imagenAnterior);
+            if ($nuevaImagen !== null) {
+                $resultado['datos']['imagen'] = $nuevaImagen;
+            } elseif ($imagenAnterior !== '') {
+                $resultado['datos']['imagen'] = $imagenAnterior;
+            }
+
             $estado = $this->eventos->guardarPrograma($slug, $resultado['datos'], false);
             if ($estado === 'ok') {
                 return redirect()->to('/admin/eventos/' . $slug . '?guardado=1');
@@ -188,6 +197,47 @@ class Admin extends BaseController
             'post' => $this->request->getPost() ?? [],
             'errores' => $resultado['errores'],
         ]);
+    }
+
+    /**
+     * @return string|null Ruta pública de la imagen guardada, o null si no se subió archivo
+     */
+    private function guardarImagenEvento(string $slug, string $anterior): ?string
+    {
+        $archivo = $this->request->getFile('imagen');
+        if ($archivo === null || $archivo->getError() === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+        if (! $archivo->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($archivo->getExtension() ?: $archivo->guessExtension() ?: 'jpg');
+        if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return null;
+        }
+
+        $directorio = FCPATH . 'uploads/eventos';
+        if (! is_dir($directorio) && ! mkdir($directorio, 0777, true) && ! is_dir($directorio)) {
+            return null;
+        }
+
+        // Borrar imagen anterior si existe
+        if ($anterior !== '' && str_starts_with($anterior, 'uploads/eventos/')) {
+            $rutaAnterior = FCPATH . $anterior;
+            if (is_file($rutaAnterior)) {
+                unlink($rutaAnterior);
+            }
+        }
+
+        $nombre = $slug . '.' . $extension;
+        try {
+            $archivo->move($directorio, $nombre, true);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return 'uploads/eventos/' . $nombre;
     }
 
     private function asegurarAdmin(): void

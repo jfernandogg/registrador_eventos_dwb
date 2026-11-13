@@ -1,5 +1,5 @@
 <?php
-/** @var list<array{slug: string, nombre: string}> $eventos */
+/** @var list<array{slug: string, nombre: string, descripcion?: string, imagen?: string}> $eventos */
 ?>
 <!doctype html>
 <html lang="es">
@@ -22,18 +22,24 @@
     <?php if ($eventos === []): ?>
         <p class="recibo-nota">No hay eventos abiertos ahora. Volvé pronto o escribí a tu centro.</p>
     <?php else: ?>
-        <ul class="lista-eventos">
+        <div class="tarjetas-eventos">
             <?php foreach ($eventos as $evento): ?>
-                <li>
-                    <a class="tarjeta-evento" href="<?= site_url('e/' . $evento['slug']) ?>">
-                        <h2><?= esc($evento['nombre']) ?></h2>
+                <a class="tarjeta-evento" href="<?= site_url('e/' . $evento['slug']) ?>">
+                    <?php $imagen = (string) ($evento['imagen'] ?? ''); ?>
+                    <?php if ($imagen !== ''): ?>
+                        <img class="tarjeta-imagen" src="<?= esc($imagen) ?>" alt="" loading="lazy">
+                    <?php else: ?>
+                        <div class="tarjeta-imagen tarjeta-placeholder"></div>
+                    <?php endif ?>
+                    <div class="tarjeta-cuerpo">
+                        <h2 class="tarjeta-titulo"><?= esc($evento['nombre']) ?></h2>
                         <?php if (($evento['descripcion'] ?? '') !== ''): ?>
-                            <p><?= esc($evento['descripcion']) ?></p>
+                            <p class="tarjeta-descripcion"><?= esc($evento['descripcion']) ?></p>
                         <?php endif ?>
-                    </a>
-                </li>
+                    </div>
+                </a>
             <?php endforeach ?>
-        </ul>
+        </div>
     <?php endif ?>
 </main>
 </body>
