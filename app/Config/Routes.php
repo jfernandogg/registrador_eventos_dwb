@@ -13,6 +13,8 @@ $routes->addRedirect('tour-365/recibo/(:num)', 'e/tour-365/recibo/$1');
 $routes->get('admin/entrar', 'Admin::entrar');
 $routes->post('admin/entrar', 'Admin::entrar');
 $routes->get('admin/salir', 'Admin::salir');
+$routes->get('admin/aceptar-invitacion', 'Admin::aceptarInvitacion');
+$routes->post('admin/aceptar-invitacion', 'Admin::aceptarInvitacion');
 $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->get('/', 'Admin::eventos');
     $routes->get('eventos/nuevo', 'Admin::nuevo');
@@ -23,4 +25,10 @@ $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->get('eventos/(:segment)/comprobantes/(:num)', 'Admin::comprobante/$1/$2');
     $routes->get('eventos/(:segment)', 'Admin::editar/$1');
     $routes->post('eventos/(:segment)', 'Admin::guardar/$1');
+    $routes->get('usuarios', 'Admin::usuarios');
+    $routes->post('usuarios/crear', 'Admin::crearUsuario');
+    $routes->post('usuarios/(:num)/rol', 'Admin::cambiarRol/$1');
+    $routes->post('usuarios/(:num)/toggle', 'Admin::toggleActivo/$1');
+    $routes->get('cambiar-clave', 'Admin::cambiarClave');
+    $routes->post('cambiar-clave', 'Admin::cambiarClave');
 });

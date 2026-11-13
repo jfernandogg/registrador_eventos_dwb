@@ -16,6 +16,8 @@
     </div>
     <nav class="barra-nav">
         <a class="activo" href="<?= site_url('admin') ?>">Lista</a>
+        <a href="<?= site_url('admin/usuarios') ?>">Usuarios</a>
+        <a href="<?= site_url('admin/cambiar-clave') ?>">Cambiar clave</a>
         <a href="<?= site_url('admin/salir') ?>">Salir</a>
     </nav>
 </header>

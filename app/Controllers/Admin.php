@@ -27,8 +27,10 @@ class Admin extends BaseController
             $correo = trim((string) $this->request->getPost('correo'));
             $clave = (string) $this->request->getPost('clave');
             $fila = db_connect()->table('usuarios')->where('correo', $correo)->get()->getRowArray();
-            if (! is_array($fila) || ! password_verify($clave, (string) $fila['clave_hash'])) {
+            if (! is_array($fila) || (string) $fila['clave_hash'] === '' || ! password_verify($clave, (string) $fila['clave_hash'])) {
                 $error = 'Correo o clave incorrectos.';
+            } elseif (empty($fila['activo'])) {
+                $error = 'Tu cuenta está desactivada. Contactá a un administrador.';
             } else {
                 session()->set('admin_id', (int) $fila['id']);
 
@@ -249,11 +251,30 @@ class Admin extends BaseController
                 correo VARCHAR(200) NOT NULL,
                 nombre VARCHAR(120) NOT NULL,
                 clave_hash VARCHAR(255) NOT NULL,
+                rol VARCHAR(20) NOT NULL DEFAULT \'invitado\',
+                activo TINYINT(1) NOT NULL DEFAULT 1,
+                token VARCHAR(64) DEFAULT NULL,
+                token_expira DATETIME DEFAULT NULL,
                 creado_en TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),
                 UNIQUE KEY correo (correo)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
         );
+
+        $cols = array_column($db->query('SHOW COLUMNS FROM usuarios')->getResultArray(), 'Field');
+        if (! in_array('rol', $cols, true)) {
+            $db->query('ALTER TABLE usuarios ADD COLUMN rol VARCHAR(20) NOT NULL DEFAULT \'invitado\' AFTER clave_hash');
+        }
+        if (! in_array('activo', $cols, true)) {
+            $db->query('ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1 AFTER rol');
+        }
+        if (! in_array('token', $cols, true)) {
+            $db->query('ALTER TABLE usuarios ADD COLUMN token VARCHAR(64) DEFAULT NULL AFTER activo');
+        }
+        if (! in_array('token_expira', $cols, true)) {
+            $db->query('ALTER TABLE usuarios ADD COLUMN token_expira DATETIME DEFAULT NULL AFTER token');
+        }
+
         if ($db->table('usuarios')->countAllResults() > 0) {
             return;
         }
@@ -261,6 +282,8 @@ class Admin extends BaseController
             'correo' => 'admin@localhost',
             'nombre' => 'Administrador',
             'clave_hash' => password_hash('cambiala', PASSWORD_DEFAULT),
+            'rol' => 'admin',
+            'activo' => 1,
             'creado_en' => date('Y-m-d H:i:s'),
         ]);
     }
@@ -316,6 +339,196 @@ class Admin extends BaseController
         }
 
         exit;
+    }
+
+    // ─── Gestión de usuarios ───────────────────────────────────────────
+
+    public function usuarios()
+    {
+        $this->requiereRol('admin');
+        $usuarios = db_connect()->table('usuarios')->orderBy('creado_en', 'ASC')->get()->getResultArray();
+
+        return view('admin/usuarios', [
+            'usuarios' => $usuarios,
+            'error' => (string) $this->request->getGet('error'),
+            'ok' => (string) $this->request->getGet('ok'),
+        ]);
+    }
+
+    public function crearUsuario()
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/usuarios');
+        }
+
+        $correo = trim((string) $this->request->getPost('correo'));
+        $nombre = trim((string) $this->request->getPost('nombre'));
+
+        if ($correo === '' || $nombre === '') {
+            return redirect()->to('/admin/usuarios?error=' . urlencode('Correo y nombre son obligatorios.'));
+        }
+
+        $db = db_connect();
+        if ($db->table('usuarios')->where('correo', $correo)->countAllResults() > 0) {
+            return redirect()->to('/admin/usuarios?error=' . urlencode('Ya existe un usuario con ese correo.'));
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $db->table('usuarios')->insert([
+            'correo' => $correo,
+            'nombre' => $nombre,
+            'clave_hash' => '',
+            'rol' => (string) ($this->request->getPost('rol') ?: 'invitado'),
+            'activo' => 1,
+            'token' => $token,
+            'token_expira' => date('Y-m-d H:i:s', strtotime('+7 days')),
+            'creado_en' => date('Y-m-d H:i:s'),
+        ]);
+
+        $enlace = site_url('admin/aceptar-invitacion?token=' . $token);
+
+        return redirect()->to('/admin/usuarios?ok=' . urlencode('Usuario creado. Enlace de invitación: ' . $enlace));
+    }
+
+    public function cambiarRol($id = null)
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/usuarios');
+        }
+
+        $db = db_connect();
+        $nuevoRol = (string) $this->request->getPost('rol');
+        if (! in_array($nuevoRol, ['admin', 'editor', 'tesorero', 'invitado'], true)) {
+            return redirect()->to('/admin/usuarios?error=Rol+no+válido');
+        }
+
+        // No permitir quitarle admin al último admin
+        if ($nuevoRol !== 'admin') {
+            $adminActual = $db->table('usuarios')->where('id', (int) $id)->get()->getRowArray();
+            if (is_array($adminActual) && $adminActual['rol'] === 'admin') {
+                $totalAdmins = $db->table('usuarios')->where('rol', 'admin')->where('activo', 1)->countAllResults();
+                if ($totalAdmins <= 1) {
+                    return redirect()->to('/admin/usuarios?error=No+podés+quitarle+el+rol+admin+al+único+administrador');
+                }
+            }
+        }
+
+        $db->table('usuarios')->where('id', (int) $id)->update(['rol' => $nuevoRol]);
+
+        return redirect()->to('/admin/usuarios?ok=Rol+actualizado');
+    }
+
+    public function toggleActivo($id = null)
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/usuarios');
+        }
+
+        $db = db_connect();
+        $usuario = $db->table('usuarios')->where('id', (int) $id)->get()->getRowArray();
+        if (! is_array($usuario)) {
+            return redirect()->to('/admin/usuarios?error=Usuario+no+encontrado');
+        }
+
+        $nuevoEstado = empty($usuario['activo']) ? 1 : 0;
+
+        // No permitir desactivar al último admin
+        if ($nuevoEstado === 0 && $usuario['rol'] === 'admin') {
+            $totalAdminsActivos = $db->table('usuarios')->where('rol', 'admin')->where('activo', 1)->countAllResults();
+            if ($totalAdminsActivos <= 1) {
+                return redirect()->to('/admin/usuarios?error=No+podés+desactivar+al+único+administrador+activo');
+            }
+        }
+
+        $db->table('usuarios')->where('id', (int) $id)->update(['activo' => $nuevoEstado]);
+
+        return redirect()->to('/admin/usuarios?ok=Usuario+' . ($nuevoEstado ? 'activado' : 'desactivado'));
+    }
+
+    public function aceptarInvitacion()
+    {
+        $db = db_connect();
+        $token = (string) ($this->request->getGet('token') ?: $this->request->getPost('token'));
+        $usuario = $token !== '' ? $db->table('usuarios')->where('token', $token)->get()->getRowArray() : null;
+        $tokenValido = is_array($usuario) && $usuario['token_expira'] > date('Y-m-d H:i:s');
+
+        $error = '';
+        if ($this->request->is('post')) {
+            if (! $tokenValido) {
+                $error = 'El enlace de invitación no es válido o ya expiró.';
+            } else {
+                $clave = (string) $this->request->getPost('clave');
+                if (strlen($clave) < 6) {
+                    $error = 'La clave debe tener al menos 6 caracteres.';
+                } else {
+                    $db->table('usuarios')->where('id', (int) $usuario['id'])->update([
+                        'clave_hash' => password_hash($clave, PASSWORD_DEFAULT),
+                        'token' => null,
+                        'token_expira' => null,
+                        'activo' => 1,
+                    ]);
+
+                    return view('admin/entrar', [
+                        'error' => '',
+                        'vuelve' => '/admin',
+                        'aviso' => 'Clave creada. Ya podés entrar con tu correo y la clave que elegiste.',
+                    ]);
+                }
+            }
+        }
+
+        return view('admin/aceptar-invitacion', [
+            'token' => $token,
+            'tokenValido' => $tokenValido,
+            'nombre' => $tokenValido ? (string) $usuario['nombre'] : '',
+            'error' => $error,
+        ]);
+    }
+
+    public function cambiarClave()
+    {
+        $error = '';
+        if ($this->request->is('post')) {
+            $adminId = (int) session()->get('admin_id');
+            $actual = (string) $this->request->getPost('clave_actual');
+            $nueva = (string) $this->request->getPost('clave_nueva');
+            $db = db_connect();
+            $usuario = $db->table('usuarios')->where('id', $adminId)->get()->getRowArray();
+
+            if (! is_array($usuario) || ! password_verify($actual, (string) $usuario['clave_hash'])) {
+                $error = 'La clave actual no coincide.';
+            } elseif (strlen($nueva) < 6) {
+                $error = 'La nueva clave debe tener al menos 6 caracteres.';
+            } else {
+                $db->table('usuarios')->where('id', $adminId)->update([
+                    'clave_hash' => password_hash($nueva, PASSWORD_DEFAULT),
+                ]);
+
+                return redirect()->to('/admin?ok=' . urlencode('Clave actualizada.'));
+            }
+        }
+
+        return view('admin/cambiar-clave', ['error' => $error]);
+    }
+
+    // ─── Helpers ────────────────────────────────────────────────────────
+
+    private function requiereRol(string $rol): void
+    {
+        $actual = (string) session()->get('admin_rol');
+        if ($rol === 'admin' && $actual !== 'admin') {
+            // Redirigir: solo admin puede
+            header('Location: ' . site_url('admin'));
+            exit;
+        }
+    }
+
+    private function generarToken(): string
+    {
+        return bin2hex(random_bytes(32));
     }
 
     /**
