@@ -32,4 +32,7 @@ $routes->group('admin', ['filter' => 'admin'], static function ($routes) {
     $routes->post('usuarios/(:num)/toggle', 'Admin::toggleActivo/$1');
     $routes->get('cambiar-clave', 'Admin::cambiarClave');
     $routes->post('cambiar-clave', 'Admin::cambiarClave');
+    $routes->get('integraciones', 'Admin::integraciones');
+    $routes->post('integraciones/correo', 'Admin::guardarCorreo');
+    $routes->post('integraciones/correo/probar', 'Admin::probarCorreo');
 });

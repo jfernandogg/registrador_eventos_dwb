@@ -154,8 +154,7 @@ class Inscripcion extends BaseController
             $total = (int) ($recibo['total'] ?? 0);
             $enlaceRecibo = site_url('e/' . $slug . '/recibo/' . $idInscripcion);
 
-            $email = \Config\Services::email();
-            $email->setFrom('no-reply@dwb.local', 'DWB Colombia');
+            $email = \App\Persistencia\CorreoConfigurado::instancia();
             $email->setTo($correo);
             $email->setSubject('Inscripción confirmada — ' . $programa->nombre);
             $email->setMessage(

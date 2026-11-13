@@ -402,8 +402,7 @@ class Admin extends BaseController
     private function enviarInvitacion(string $correo, string $nombre, string $enlace): bool
     {
         try {
-            $email = \Config\Services::email();
-            $email->setFrom('no-reply@dwb.local', 'DWB Colombia');
+            $email = \App\Persistencia\CorreoConfigurado::instancia();
             $email->setTo($correo);
             $email->setSubject('Invitación para el backoffice de DWB Colombia');
             $email->setMessage(
@@ -548,6 +547,82 @@ class Admin extends BaseController
         }
 
         return view('admin/cambiar-clave', ['error' => $error]);
+    }
+
+    // ─── Integraciones ────────────────────────────────────────────────────
+
+    public function integraciones()
+    {
+        $this->requiereRol('admin');
+        $repositorio = new \App\Persistencia\RepositorioConfiguracion();
+        $config = $repositorio->todos();
+
+        $emailConfig = new \Config\Email();
+        $valores = [
+            'correo_protocolo' => (string) ($config['correo_protocolo'] ?? $emailConfig->protocol),
+            'correo_smtp_host' => (string) ($config['correo_smtp_host'] ?? $emailConfig->SMTPHost),
+            'correo_smtp_puerto' => (string) ($config['correo_smtp_puerto'] ?? (string) $emailConfig->SMTPPort),
+            'correo_smtp_usuario' => (string) ($config['correo_smtp_usuario'] ?? $emailConfig->SMTPUser),
+            'correo_smtp_clave' => (string) ($config['correo_smtp_clave'] ?? $emailConfig->SMTPPass),
+            'correo_smtp_cripto' => (string) ($config['correo_smtp_cripto'] ?? $emailConfig->SMTPCrypto),
+            'correo_from_email' => (string) ($config['correo_from_email'] ?? $emailConfig->fromEmail),
+            'correo_from_nombre' => (string) ($config['correo_from_nombre'] ?? $emailConfig->fromName),
+        ];
+
+        return view('admin/integraciones', [
+            'valores' => $valores,
+            'error' => (string) $this->request->getGet('error'),
+            'ok' => (string) $this->request->getGet('ok'),
+        ]);
+    }
+
+    public function guardarCorreo()
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/integraciones');
+        }
+
+        $post = $this->request->getPost();
+        $valores = [];
+        foreach (\App\Persistencia\RepositorioConfiguracion::clavesCorreo() as $clave) {
+            $valores[$clave] = trim((string) ($post[$clave] ?? ''));
+        }
+
+        $puerto = (int) ($valores['correo_smtp_puerto'] ?? 0);
+        if ($valores['correo_smtp_puerto'] !== '' && ($puerto < 1 || $puerto > 65535)) {
+            return redirect()->to('/admin/integraciones?error=' . urlencode('El puerto SMTP debe estar entre 1 y 65535.'));
+        }
+
+        (new \App\Persistencia\RepositorioConfiguracion())->guardar($valores);
+
+        return redirect()->to('/admin/integraciones?ok=' . urlencode('Configuración de correo guardada.'));
+    }
+
+    public function probarCorreo()
+    {
+        $this->requiereRol('admin');
+        if (! $this->request->is('post')) {
+            return redirect()->to('/admin/integraciones');
+        }
+        $destino = trim((string) $this->request->getPost('destino'));
+        if ($destino === '' || ! filter_var($destino, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->to('/admin/integraciones?error=' . urlencode('Escribe un correo de destino válido.'));
+        }
+
+        try {
+            $email = \App\Persistencia\CorreoConfigurado::instancia();
+            $email->setTo($destino);
+            $email->setSubject('Prueba de correo — DWB Colombia');
+            $email->setMessage("Si ves este mensaje, la configuración de correo funciona.\n\n— DWB Colombia");
+            if (! $email->send(false)) {
+                return redirect()->to('/admin/integraciones?error=' . urlencode('No se pudo enviar: ' . $email->printDebugger()));
+            }
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/integraciones?error=' . urlencode('Error: ' . $e->getMessage()));
+        }
+
+        return redirect()->to('/admin/integraciones?ok=' . urlencode('Correo de prueba enviado a ' . $destino . '.'));
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────
