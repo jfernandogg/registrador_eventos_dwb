@@ -67,7 +67,7 @@ $cursosElegidos = array_values(array_filter(
         <strong>Revisa estos datos antes de continuar:</strong>
         <ul id="avisos-lista"></ul>
     </div>
-    <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar'), 'data-evento' => esc($programa->nombre)]) ?>
+    <?= form_open_multipart('/e/' . $slug, ['id' => 'inscripcion', 'novalidate' => 'novalidate', 'data-cotizar' => site_url('e/' . $slug . '/cotizar'), 'data-link-pago' => site_url('e/' . $slug . '/link-pago'), 'data-evento' => esc($programa->nombre)]) ?>
 
     <h2>Tus datos</h2>
     <?php foreach ($programa->ficha as $campo): ?>
@@ -212,6 +212,13 @@ $cursosElegidos = array_values(array_filter(
         <?= $error('forma_pago') ?>
     </label>
     <div id="instrucciones-pago"></div>
+    <input type="hidden" name="payment_link_generado" id="payment_link_generado">
+    <div id="bloque-link-pago" class="si-oculto" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">
+        <p style="font-weight: 650; margin-bottom: 0.4rem;">Pago con tarjeta:</p>
+        <button type="button" id="btn-link-pago" class="boton-primario" style="margin: 0;">Generar enlace de pago</button>
+        <p class="ayuda" id="link-pago-estado" style="margin: 0.5rem 0 0;"></p>
+        <div id="link-pago-resultado" style="margin-top: 0.5rem;"></div>
+    </div>
     <div id="bloque-comprobante" class="depende<?= in_array($valor('forma_pago'), ['transferencia', 'tarjeta'], true) ? '' : ' si-oculto' ?>">
     <label>Comprobante, solo si pagas por transferencia o tarjeta solas
         <input type="file" name="comprobante" accept=".pdf,.jpg,.jpeg,.png" id="input-comprobante">
@@ -237,12 +244,19 @@ $cursosElegidos = array_values(array_filter(
     (function(){
         var CUENTA = <?= json_encode($programa->cuentaBancaria) ?>;
         var BREB = <?= json_encode($programa->breb) ?>;
-        var SLUG = <?= json_encode($slug) ?>;
         var formaPago = document.querySelector('select[name="forma_pago"]');
         var instrucciones = document.getElementById('instrucciones-pago');
+        var bloqueLink = document.getElementById('bloque-link-pago');
+        var btnLink = document.getElementById('btn-link-pago');
+        var estadoLink = document.getElementById('link-pago-estado');
+        var resultadoLink = document.getElementById('link-pago-resultado');
+        var campoLink = document.getElementById('payment_link_generado');
+        var form = document.getElementById('inscripcion');
 
         function mostrar() {
             var v = formaPago.value;
+            var esTarjeta = v === 'tarjeta';
+            bloqueLink.classList.toggle('si-oculto', !esTarjeta);
             if (!v || v === 'sitio' || v === 'ruta_budista') {
                 instrucciones.innerHTML = '';
                 return;
@@ -262,8 +276,7 @@ $cursosElegidos = array_values(array_filter(
                 html += '</div>';
             } else if (v === 'tarjeta') {
                 html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
-                html += '<p style="font-weight: 650; margin-bottom: 0.3rem;">Pago con tarjeta:</p>';
-                html += '<p style="font-size: 0.88rem; margin: 0;">Elegiste pago con tarjeta. Al confirmar la inscripción vas a recibir un enlace para completar el pago en la pasarela.</p>';
+                html += '<p style="font-size: 0.88rem; margin: 0;">Generá el enlace de pago para abrir la pasarela. Después del pago, bajá el comprobante y subilo abajo para terminar.</p>';
                 html += '</div>';
             } else {
                 html += '<div class="instrucciones-bloque" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">';
@@ -273,12 +286,40 @@ $cursosElegidos = array_values(array_filter(
             instrucciones.innerHTML = html;
         }
 
+        async function generarLink() {
+            btnLink.disabled = true;
+            estadoLink.textContent = 'Generando el enlace de pago…';
+            resultadoLink.innerHTML = '';
+            var datos = new FormData(form);
+            datos.delete('comprobante');
+            try {
+                var respuesta = await fetch(form.dataset.linkPago, {
+                    method: 'POST',
+                    body: datos,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                var datosJson = await respuesta.json();
+                if (!respuesta.ok || !datosJson.url) {
+                    estadoLink.textContent = datosJson.error || 'No se pudo generar el enlace de pago.';
+                    btnLink.disabled = false;
+                    return;
+                }
+                campoLink.value = datosJson.payment_link || '';
+                resultadoLink.innerHTML = '<a class="boton-primario" href="' + escapeHtml(datosJson.url) + '" target="_blank" rel="noopener" style="display: inline-block; text-decoration: none; padding: 0.5rem 1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Pagar con tarjeta (Bold)</a>';
+                estadoLink.textContent = 'Pagaste? Bajá el comprobante del pago y subilo abajo para terminar la inscripción.';
+            } catch (e) {
+                estadoLink.textContent = 'No se pudo generar el enlace. Revisá la conexión.';
+                btnLink.disabled = false;
+            }
+        }
+
         function escapeHtml(s) {
             var d = document.createElement('div');
             d.textContent = s;
             return d.innerHTML;
         }
 
+        btnLink.addEventListener('click', generarLink);
         formaPago.addEventListener('change', mostrar);
         mostrar();
     })();

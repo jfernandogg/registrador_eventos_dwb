@@ -63,9 +63,59 @@ class Inscripcion extends BaseController
         ]);
     }
 
+    /**
+     * AJAX: crea el link de pago (Bold) con el total calculado en el servidor,
+     * sin guardar aún la inscripción. Devuelve la URL de la pasarela para que
+     * el participante abra la pasarela (target=_blank), pague, baje el
+     * comprobante y lo suba al confirmar.
+     */
+    public function linkPago(string $slug): \CodeIgniter\HTTP\ResponseInterface
+    {
+        $programa = $this->programa($slug);
+        $bold = new \App\Persistencia\BoldClient();
+        if (! $bold->configurado()) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'El pago con tarjeta aún no está disponible.']);
+        }
+
+        $codigoForma = (string) ($this->request->getPost('forma_pago') ?? '');
+        $forma = $programa->formaPago($codigoForma);
+        if ($forma === null) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Elige primero la forma de pago.']);
+        }
+        if (! $forma->cobraEnRegistro) {
+            return $this->response->setStatusCode(400)->setJSON(['error' => 'Esta forma de pago no genera un enlace de pago.']);
+        }
+
+        $resultado = $this->asistente->procesar($programa, $this->request->getPost() ?? [], false, false);
+        $total = $resultado->cotizacion?->total();
+        if ($resultado->errores !== [] || $total === null || $total <= 0) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'error' => 'Faltan datos para calcular el total. Completá el formulario (incluido el curso y tus datos) antes de generar el enlace.',
+            ]);
+        }
+
+        try {
+            $link = $bold->crearLink([
+                'reference' => 'REG-' . strtoupper(bin2hex(random_bytes(5))),
+                'amount' => $total,
+                'description' => mb_substr($programa->nombre, 0, 100),
+                'payer_email' => trim((string) ($this->request->getPost('correo') ?? '')),
+            ]);
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(500)->setJSON(['error' => 'No se pudo crear el enlace de pago: ' . $e->getMessage()]);
+        }
+
+        return $this->response->setStatusCode(200)->setJSON([
+            'url' => $link['url'] ?? $bold->urlDelLink((string) $link['payment_link']),
+            'payment_link' => $link['payment_link'],
+        ]);
+    }
+
     public function enviar(string $slug)
     {
         $programa = $this->programa($slug);
+        // Enlace de pago que se haya generado antes de confirmar.
+        $linkGenerado = trim((string) ($this->request->getPost('payment_link_generado') ?? ''));
         $confirmar = $this->request->getPost('accion') === 'confirmar';
         $archivo = $this->request->getFile('comprobante');
         $guardado = $this->nombreGuardado((string) ($this->request->getPost('comprobante_guardado') ?? ''));
@@ -99,6 +149,14 @@ class Inscripcion extends BaseController
             } elseif ($guardadoDb['estado'] !== 'guardada') {
                 $errores[$claveDocumento] = 'No se pudo guardar la inscripción. Intenta de nuevo.';
             } else {
+                // Si se generó un link de pago antes de confirmar, asociarlo.
+                if ($linkGenerado !== '' && preg_match('/^LNK_[A-Za-z0-9]+$/', $linkGenerado) === 1) {
+                    $this->eventos->guardarPago((int) $guardadoDb['id'], [
+                        'payment_link' => $linkGenerado,
+                        'payment_status' => 'ACTIVE',
+                    ]);
+                }
+
                 $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
 
                 return redirect()->to('/e/' . $slug . '/recibo/' . $guardadoDb['id']);
