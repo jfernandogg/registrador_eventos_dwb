@@ -17,9 +17,11 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
     <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 </head>
 <body>
-<header class="barra">
-    <nav>
-        <a class="marca" href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt=""></a>
+<header>
+    <div class="cabecera-logo">
+        <a href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt="DWB Colombia"></a>
+    </div>
+    <nav class="barra-nav">
         <span class="miga">›</span>
         <span><?= esc($nombre) ?></span>
         <a href="<?= site_url('admin/eventos/' . $slug) ?>">Parametrizar</a>

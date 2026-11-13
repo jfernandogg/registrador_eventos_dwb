@@ -49,16 +49,18 @@ $conteos = [
 </head>
 <body>
 <a class="saltar" href="#editor">Saltar al formulario</a>
-<header class="barra">
-    <nav>
-        <a class="marca" href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt=""></a>
+<header>
+    <div class="cabecera-logo">
+        <a href="<?= site_url('admin') ?>"><img class="logo-dwb" src="<?= base_url('dwb-logo.svg') ?>" alt="DWB Colombia"></a>
+    </div>
+    <nav class="barra-nav">
         <?php if (! $nuevo): ?>
-                            <a href="<?= site_url('e/' . $slug) ?>" target="_blank" rel="noopener">Previsualizar</a>
-                            <a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a>
-                            <a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a>
-                        <?php endif ?>
+            <a href="<?= site_url('e/' . $slug) ?>" target="_blank" rel="noopener">Previsualizar</a>
+            <a href="<?= site_url('admin/eventos/' . $slug . '/inscritos') ?>">Inscritos</a>
+            <a href="<?= site_url('e/' . $slug) ?>">Ver inscripción</a>
+        <?php endif ?>
+        <button class="boton" type="submit" form="editor">Guardar</button>
     </nav>
-    <button class="boton" type="submit" form="editor">Guardar</button>
 </header>
 <div class="contenido">
     <nav class="indice" aria-label="Secciones">
