@@ -7,6 +7,7 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
 $enlace = static fn (string $filtro): string => site_url('admin/eventos/' . $slug . '/inscritos') . ($filtro === '' ? '' : '?ver=' . $filtro);
 $detalleUrl = static fn (int $id): string => site_url('admin/eventos/' . $slug . '/inscritos/' . $id) . ($ver !== '' ? '?ver=' . $ver : '');
 $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
+$total = count($filas);
 ?>
 <!doctype html>
 <html lang="es">
@@ -30,14 +31,19 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
 </header>
 <main class="contenido" style="grid-template-columns: 1fr;">
     <section class="panel">
-        <h1><?= esc($nombre) ?></h1>
-        <p class="intro">El comprobante se abre con sesión. Las notas son solo de alojamiento: seguro y emergencia no salen.</p>
-        <p class="filtros">
-            <a class="<?= $ver === '' ? 'activo' : '' ?>" href="<?= $enlace('') ?>">Todas</a>
-            <a class="<?= $ver === 'comprobante' ? 'activo' : '' ?>" href="<?= $enlace('comprobante') ?>">Con comprobante</a>
-            <a class="<?= $ver === 'alojamiento' ? 'activo' : '' ?>" href="<?= $enlace('alojamiento') ?>">Con nota de alojamiento</a>
-            <button class="boton claro" id="btn-exportar" style="margin-left: 0.6rem;">Exportar CSV</button>
-        </p>
+        <h1 style="display: flex; justify-content: space-between; align-items: baseline;">
+            <span><?= esc($nombre) ?></span>
+            <span style="font-size: 0.88rem; font-weight: 400; color: var(--muted);"><?= $total ?> inscripciones</span>
+        </h1>
+        <div class="barra-tabla">
+            <p class="filtros">
+                <a class="<?= $ver === '' ? 'activo' : '' ?>" href="<?= $enlace('') ?>">Todas</a>
+                <a class="<?= $ver === 'comprobante' ? 'activo' : '' ?>" href="<?= $enlace('comprobante') ?>">Con comprobante</a>
+                <a class="<?= $ver === 'alojamiento' ? 'activo' : '' ?>" href="<?= $enlace('alojamiento') ?>">Con nota de alojamiento</a>
+                <button class="boton claro" id="btn-exportar" style="margin-left: 0.6rem;">Exportar CSV</button>
+            </p>
+            <div class="paginacion-superior" id="paginacion-top"></div>
+        </div>
         <?php if ($filas === []): ?>
             <div class="alerta aviso" style="display: flex; gap: 0.8rem; align-items: flex-start;">
                 <span style="font-size: 1.5rem;">📋</span>
@@ -49,53 +55,54 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
                 </div>
             </div>
         <?php else: ?>
-            <table class="lista">
+            <div class="tabla-contenedor">
+            <table class="hoja-datos" id="tabla-inscritos">
                 <thead>
                     <tr>
-                        <th>Persona</th>
-                        <th>Pago</th>
-                        <th>Comprobante</th>
-                        <th>Alojamiento</th>
-                        <th>Detalle</th>
+                        <th style="width: 28%;">Persona</th>
+                        <th style="width: 18%;">Pago</th>
+                        <th style="width: 14%;">Comprobante</th>
+                        <th style="width: 24%;">Alojamiento</th>
+                        <th style="width: 16%; text-align: right;">Detalle</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($filas as $fila): ?>
-                    <tr class="fila-clicable" data-href="<?= $detalleUrl((int) $fila['id']) ?>" style="cursor: pointer;">
+                    <tr class="fila-clicable" data-href="<?= $detalleUrl((int) $fila['id']) ?>">
                         <td>
-                            <strong><?= esc((string) $fila['nombre']) ?></strong><br>
-                            <?= esc((string) $fila['documento']) ?><br>
-                            <span class="ayuda"><?= esc((string) $fila['correo']) ?> · <?= esc((string) $fila['creado_en']) ?></span>
+                            <strong><?= esc((string) $fila['nombre']) ?></strong>
+                            <span class="ayuda"><?= esc((string) $fila['documento']) ?></span>
+                            <span class="ayuda"><?= esc((string) $fila['correo']) ?> &middot; <?= esc((string) ($fila['creado_en'] ?? '')) ?></span>
                         </td>
                         <td>
-                            <?= esc((string) $fila['forma']) ?><br>
-                            $ <?= $pesos((int) $fila['total']) ?><br>
-                            <span class="ayuda"><?= esc((string) $fila['estado']) ?></span>
+                            <strong>$ <?= $pesos((int) $fila['total']) ?></strong>
+                            <span class="ayuda"><?= esc((string) $fila['forma']) ?> — <?= esc((string) $fila['estado']) ?></span>
                         </td>
                         <td>
                             <?php if ($fila['comprobante'] !== null): ?>
-                                <a href="<?= site_url('admin/eventos/' . $slug . '/comprobantes/' . $fila['id']) ?>" onclick="event.stopPropagation()">Abrir comprobante</a>
+                                <a class="enlace-comprobante" href="<?= site_url('admin/eventos/' . $slug . '/comprobantes/' . $fila['id']) ?>" onclick="event.stopPropagation()">Abrir</a>
                             <?php else: ?>
-                                <span class="ayuda">No envió soporte.</span>
+                                <span class="sin-comprobante">&mdash;</span>
                             <?php endif ?>
                         </td>
                         <td>
                             <?php if ($fila['alojamiento'] === []): ?>
-                                <span class="ayuda">Sin nota.</span>
+                                <span class="ayuda">&mdash;</span>
                             <?php else: ?>
-                                <?php foreach ($fila['alojamiento'] as $nota): ?>
-                                    <p><?= esc((string) $nota) ?></p>
-                                <?php endforeach ?>
+                                <?= esc(implode(' &middot; ', $fila['alojamiento'])) ?>
                             <?php endif ?>
                         </td>
-                        <td style="text-align: center;">
-                            <a class="boton claro" href="<?= $detalleUrl((int) $fila['id']) ?>" style="font-size: 0.85rem; padding: 0.3rem 0.6rem;">Ver detalle</a>
+                        <td class="celda-detalle">
+                            <a class="boton claro" href="<?= $detalleUrl((int) $fila['id']) ?>">Ver detalle</a>
                         </td>
                     </tr>
                 <?php endforeach ?>
                 </tbody>
             </table>
+            </div>
         <?php endif ?>
+
+        <nav class="paginacion" id="paginacion-inferior" aria-label="Paginación"></nav>
     </section>
     </main>
 
@@ -148,5 +155,52 @@ $exportarUrl = site_url('admin/eventos/' . $slug . '/exportar');
         });
     })();
     </script>
-    </body>
-    </html>
+        <script>
+        // Paginacion — se ejecuta despues del DOM listo
+        (function(){
+            var POR_PAGINA = 15;
+            var tabla = document.getElementById('tabla-inscritos');
+            if (!tabla) return;
+            var filas = Array.from(tabla.querySelectorAll('tbody tr'));
+            if (filas.length <= POR_PAGINA) return;
+
+            var pagActual = 1;
+            var totalPaginas = Math.ceil(filas.length / POR_PAGINA);
+
+            function mostrarPagina(pag) {
+                pagActual = pag;
+                var inicio = (pag - 1) * POR_PAGINA;
+                var fin = inicio + POR_PAGINA;
+                filas.forEach(function(f, i) { f.style.display = (i >= inicio && i < fin) ? '' : 'none'; });
+                renderizarControles();
+            }
+
+            function renderizarControles() {
+                var html = '<span class=\"paginacion-info\">' + pagActual + ' de ' + totalPaginas + '</span>';
+                html += '<button class=\"paginacion-btn\"' + (pagActual === 1 ? ' disabled' : '') + ' data-pag=\"1\">&laquo;</button>';
+                html += '<button class=\"paginacion-btn\"' + (pagActual === 1 ? ' disabled' : '') + ' data-pag=\"' + (pagActual - 1) + '\">&lsaquo;</button>';
+
+                var desde = Math.max(1, pagActual - 2);
+                var hasta = Math.min(totalPaginas, pagActual + 2);
+                for (var p = desde; p <= hasta; p++) {
+                    html += '<button class=\"paginacion-btn' + (p === pagActual ? ' activo' : '') + '\" data-pag=\"' + p + '\">' + p + '</button>';
+                }
+
+                html += '<button class=\"paginacion-btn\"' + (pagActual === totalPaginas ? ' disabled' : '') + ' data-pag=\"' + (pagActual + 1) + '\">&rsaquo;</button>';
+                html += '<button class=\"paginacion-btn\"' + (pagActual === totalPaginas ? ' disabled' : '') + ' data-pag=\"' + totalPaginas + '\">&raquo;</button>';
+
+                document.getElementById('paginacion-inferior').innerHTML = html;
+                var topEl = document.getElementById('paginacion-top');
+                if (topEl) topEl.innerHTML = '<span class=\"paginacion-resumen\">' + ((pagActual - 1) * POR_PAGINA + 1) + '\u2013' + Math.min(pagActual * POR_PAGINA, filas.length) + ' de ' + filas.length + '</span>';
+            }
+
+            document.getElementById('paginacion-inferior').addEventListener('click', function(e) {
+                var btn = e.target.closest('.paginacion-btn');
+                if (btn && !btn.disabled) { mostrarPagina(parseInt(btn.dataset.pag)); }
+            });
+
+            mostrarPagina(1);
+        })();
+        </script>
+        </body>
+        </html>
