@@ -24,10 +24,12 @@ Estado al 13 de noviembre de 2026. Lo marcado como hecho se probó. Lo demás no
 - [x] Build de producción (`composer install --no-dev`) + guía de despliegue `DESPLIEGUE.md`
 - [x] Integración Bold por **API Link de pagos**: `BoldClient` (crear/consultar link, validar firma), webhook `/webhook/bold`, endpoint `/pagar/{slug}/{id}`, sección Bold en `/admin/integraciones`, botón de pago en el recibo, columnas de pago en `inscripciones`. Probada contra la API sandbox (crea link de $1.000 y consulta estado)
 - [x] Generación del link de pago por AJAX en el formulario (`POST /e/{slug}/link-pago`, `target=_blank`): el participante genera el enlace, paga, baja el comprobante y lo sube antes de terminar. Resuelve el círculo de tarjeta (cobra + pide comprobante). Dato de prueba: inscripción N° 6 (`88888777`, total 88.000) guardada con `payment_link` + `ACTIVE` + comprobante
+- [x] Bloqueo de doble envío del formulario: al confirmar se marca el form y se deshabilitan los botones; un segundo envío del mismo formulario se descarta. Evita que un doble clic en *Terminar inscripción* choque contra la regla de documento activo y confunda con "no se redirigió"
+- [x] Registro de webhooks en `webhook_entradas` (uuid idempotente, payload completo, firma, asociación) + vista `/admin/webhooks` (listado con estado) y `/admin/webhooks/{id}` (detalle + payload). El responsable revisa todos los pagos, incluso los no asociados. Probado: SALE_APPROVED (PAY_W001/LNK_0G1HZ9N7IV/INS-4) → asociada a inscripción 4, estado PAID
+- [x] Fin de inscripción: verificado que con documento nuevo y guardada, `enviar()` redirige al recibo (303 → `/e/{slug}/recibo/{id}`). El caso duplicado queda en el formulario con su error (correcto). El "no redirigió" reportado era un doble envío, hoy bloqueado
 
 ## Siguiente
 
-- [ ] Reparar/verificar el fin de inscripción: tras el éxito debe **redirigir al recibo** (`/e/{slug}/recibo/{id}`). Con un documento ya inscrito no redirige (queda en el formulario con el error de duplicado), que es lo esperado; confirmar que con documento nuevo e inscripción guardada el flujo vaya al recibo.
 - [ ] Publicar en GoDaddy: subir archivos, crear BD, configurar `.env`
 - [ ] Probar flujo completo en producción: inscripción → pago → webhook → confirmación
 - [ ] Definir modo produccion: cambiar `bold_ambiente` y cargar las llaves de producción (la llave provista es de pruebas)
