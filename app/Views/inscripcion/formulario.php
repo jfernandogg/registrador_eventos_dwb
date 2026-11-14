@@ -219,6 +219,7 @@ $cursosElegidos = array_values(array_filter(
     </label>
     <div id="instrucciones-pago"></div>
     <input type="hidden" name="payment_link_generado" id="payment_link_generado">
+    <input type="hidden" name="idempotencia" value="<?= esc($idempotencia) ?>">
     <div id="bloque-link-pago" class="si-oculto" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">
         <p style="font-weight: 650; margin-bottom: 0.4rem;">Pago con tarjeta:</p>
         <button type="button" id="btn-link-pago" class="boton-primario" style="margin: 0;">Generar enlace de pago</button>

@@ -118,9 +118,28 @@ class Inscripcion extends BaseController
         $linkGenerado = trim((string) ($this->request->getPost('payment_link_generado') ?? ''));
         $confirmar = $this->request->getPost('accion') === 'confirmar';
         $archivo = $this->request->getFile('comprobante');
-        $guardado = $this->nombreGuardado((string) ($this->request->getPost('comprobante_guardado') ?? ''));
+        $nonce = (string) ($this->request->getPost('idempotencia') ?? '');
         $claveDocumento = $programa->claveConRol('documento') ?? 'documento';
-        $carga = $this->guardarComprobante($archivo, (string) ($this->request->getPost($claveDocumento) ?? 'comprobante'));
+        $documentoActual = trim((string) ($this->request->getPost($claveDocumento) ?? ''));
+
+        // Idempotencia del envío: si este formulario (nonce) ya se procesó, no
+        // reprocesar ni duplicar. Si el primer envío creó una inscripción, este
+        // reintento muestra su recibo (evita el "duplicado" por doble envío).
+        $reclama = null;
+        if ($confirmar && $nonce !== '') {
+            $intento = $this->eventos->reclamarIntento($nonce);
+            if (! $intento['nuevo'] && is_array($intento['fila'])) {
+                if ((int) $intento['fila']['inscripcion_id'] > 0) {
+                    return redirect()->to('/e/' . $slug . '/recibo/' . (int) $intento['fila']['inscripcion_id']);
+                }
+
+                return view('inscripcion/formulario', $this->datos($programa, $slug, null, $this->request->getPost() ?? [], []));
+            }
+            $reclama = $nonce;
+        }
+
+        $guardado = $this->nombreGuardado((string) ($this->request->getPost('comprobante_guardado') ?? ''), $documentoActual);
+        $carga = $this->guardarComprobante($archivo, $documentoActual);
         if ($carga['nombre'] !== null) {
             $guardado = $carga['nombre'];
         }
@@ -159,8 +178,16 @@ class Inscripcion extends BaseController
 
                 $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
 
+                if ($reclama !== null) {
+                    $this->eventos->completarIntento($reclama, (int) $guardadoDb['id']);
+                }
+
                 return redirect()->to('/e/' . $slug . '/recibo/' . $guardadoDb['id']);
             }
+        }
+
+        if ($reclama !== null) {
+            $this->eventos->fallarIntento($reclama);
         }
 
         return view('inscripcion/formulario', $this->datos($programa, $slug, $resultado, $entrada, $errores));
@@ -345,9 +372,14 @@ class Inscripcion extends BaseController
         return ['nombre' => $nombre, 'error' => null];
     }
 
-    private function nombreGuardado(string $nombre): ?string
+    private function nombreGuardado(string $nombre, string $documentoEsperado): ?string
     {
-        if (preg_match('/^[A-Za-z0-9_-]+\.(pdf|jpg|jpeg|png)$/', $nombre) !== 1) {
+        if (preg_match('/^([A-Za-z0-9_-]+)-\d{14}\.(pdf|jpg|jpeg|png)$/', $nombre, $m) !== 1) {
+            return null;
+        }
+        $baseEsperada = preg_replace('/[^A-Za-z0-9_-]/', '', $documentoEsperado);
+        if ($m[1] !== $baseEsperada) {
+            // El comprobante guardado pertenece a otro documento: no conservarlo.
             return null;
         }
         $ruta = WRITEPATH . 'uploads/comprobantes/' . $nombre;
@@ -375,6 +407,7 @@ class Inscripcion extends BaseController
         return [
             'programa' => $programa,
             'slug' => $slug,
+            'idempotencia' => bin2hex(random_bytes(16)),
             'entrada' => $entrada,
             'errores' => $errores !== [] ? $errores : ($resultado?->errores ?? []),
             'cotizacion' => $resultado?->cotizacion,

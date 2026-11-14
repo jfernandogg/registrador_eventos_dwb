@@ -676,6 +676,73 @@ final class RepositorioEventos
         }, $filas);
     }
 
+/**
+     * Asegura la tabla de intentos de envío (auto-migración). Guarda un nonce por
+     * intento de confirmar una inscripción para que un doble envío del mismo
+     * formulario no cree dos registros activos ni muestre "duplicado".
+     */
+    public function asegurarTablaIntentos(): void
+    {
+        $db = db_connect();
+        try {
+            $db->query(
+                'CREATE TABLE IF NOT EXISTS intentos_enviados (
+                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    nonce CHAR(32) NOT NULL,
+                    inscripcion_id INT UNSIGNED NULL,
+                    terminado TINYINT(1) NOT NULL DEFAULT 0,
+                    creado_en DATETIME NOT NULL,
+                    UNIQUE KEY uq_intento_nonce (nonce)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+            );
+        } catch (\Throwable) {
+            // Si ya existe o no se puede crear, se ignora.
+        }
+    }
+
+    /**
+     * Idempotencia del envío: el primer POST de un nonce se queda con él; un
+     * reintento del mismo formulario se detecta y no debe duplicar la inscripción.
+     *
+     * @return array{nuevo: bool, fila: ?array<string, mixed>}
+     */
+    public function reclamarIntento(string $nonce): array
+    {
+        $this->asegurarTablaIntentos();
+        $db = db_connect();
+        try {
+            $db->table('intentos_enviados')->insert([
+                'nonce' => $nonce,
+                'terminado' => 0,
+                'creado_en' => date('Y-m-d H:i:s'),
+            ]);
+
+            return ['nuevo' => true, 'fila' => null];
+        } catch (\Throwable $error) {
+            if (! str_contains($error->getMessage(), 'Duplicate')) {
+                // Tabla no disponible: se comporta como primer intento.
+                return ['nuevo' => true, 'fila' => null];
+            }
+            $fila = $db->table('intentos_enviados')->where('nonce', $nonce)->get()->getRowArray();
+
+            return ['nuevo' => false, 'fila' => is_array($fila) ? $fila : null];
+        }
+    }
+
+    public function completarIntento(string $nonce, int $inscripcionId): void
+    {
+        db_connect()->table('intentos_enviados')
+            ->where('nonce', $nonce)
+            ->update(['terminado' => 1, 'inscripcion_id' => $inscripcionId]);
+    }
+
+    public function fallarIntento(string $nonce): void
+    {
+        db_connect()->table('intentos_enviados')
+            ->where('nonce', $nonce)
+            ->update(['terminado' => 1]);
+    }
+
     private function enPruebas(): bool
     {
         return defined('ENVIRONMENT') && ENVIRONMENT === 'testing';
