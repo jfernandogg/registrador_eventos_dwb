@@ -313,8 +313,8 @@ $cursosElegidos = array_values(array_filter(
                     btnLink.disabled = false;
                     return;
                 }
-                campoLink.value = datos.payment_link || '';
-                                    campoRef.value = datos.reference || '';
+                                campoLink.value = datosJson.payment_link || '';
+                campoRef.value = datosJson.reference || '';
                 resultadoLink.innerHTML = '<a class="boton-primario" href="' + escapeHtml(datosJson.url) + '" target="_blank" rel="noopener" style="display: inline-block; text-decoration: none; padding: 0.5rem 1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Pagar con tarjeta (Bold)</a>';
                 estadoLink.textContent = 'Pagaste? Bajá el comprobante del pago y subilo abajo para terminar la inscripción.';
             } catch (e) {
