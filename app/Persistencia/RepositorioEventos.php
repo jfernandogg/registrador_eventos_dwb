@@ -503,6 +503,7 @@ final class RepositorioEventos
                     payment_link VARCHAR(60) NOT NULL DEFAULT \'\',
                     referencia VARCHAR(80) NOT NULL DEFAULT \'\',
                     firma_valida TINYINT(1) NOT NULL DEFAULT 0,
+                    firma_recibida VARCHAR(200) NOT NULL DEFAULT \'\',
                     inscripcion_id INT UNSIGNED NULL,
                     payment_status VARCHAR(30) NOT NULL DEFAULT \'\',
                     asociada TINYINT(1) NOT NULL DEFAULT 0,
@@ -513,6 +514,17 @@ final class RepositorioEventos
             );
         } catch (\Throwable) {
             // Si ya existe o no se puede crear, se ignora.
+        }
+
+        // Guardián: agrega columnas nuevas a la tabla ya existente.
+        try {
+            $columnas = $db->query('SHOW COLUMNS FROM webhook_entradas')->getResultArray();
+        } catch (\Throwable) {
+            return;
+        }
+        $nombres = array_map(static fn ($c) => (string) $c['Field'], $columnas);
+        if (! in_array('firma_recibida', $nombres, true)) {
+            $db->query('ALTER TABLE webhook_entradas ADD COLUMN firma_recibida VARCHAR(200) NOT NULL DEFAULT \'\'');
         }
     }
 
@@ -529,28 +541,30 @@ final class RepositorioEventos
         $uuid = (string) ($datos['uuid'] ?? '');
         $db->query(
             'INSERT INTO webhook_entradas
-                (proveedor, uuid, recibido_en, tipo, payment_id, payment_link, referencia, firma_valida, nota, payload_json)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE
-                recibido_en = VALUES(recibido_en),
-                tipo = VALUES(tipo),
-                payment_id = VALUES(payment_id),
-                payment_link = VALUES(payment_link),
-                referencia = VALUES(referencia),
-                firma_valida = VALUES(firma_valida),
-                payload_json = VALUES(payload_json)',
-            [
-                (string) ($datos['proveedor'] ?? 'bold'),
-                $uuid === '' ? null : $uuid,
-                (string) ($datos['recibido_en'] ?? date('Y-m-d H:i:s')),
-                (string) ($datos['tipo'] ?? ''),
-                (string) ($datos['payment_id'] ?? ''),
-                (string) ($datos['payment_link'] ?? ''),
-                (string) ($datos['referencia'] ?? ''),
-                (int) ($datos['firma_valida'] ?? 0),
-                (string) ($datos['nota'] ?? ''),
-                (string) ($datos['payload_json'] ?? ''),
-            ]
+                            (proveedor, uuid, recibido_en, tipo, payment_id, payment_link, referencia, firma_valida, firma_recibida, nota, payload_json)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         ON DUPLICATE KEY UPDATE
+                            recibido_en = VALUES(recibido_en),
+                            tipo = VALUES(tipo),
+                            payment_id = VALUES(payment_id),
+                            payment_link = VALUES(payment_link),
+                            referencia = VALUES(referencia),
+                            firma_valida = VALUES(firma_valida),
+                            firma_recibida = VALUES(firma_recibida),
+                            payload_json = VALUES(payload_json)',
+                        [
+                            (string) ($datos['proveedor'] ?? 'bold'),
+                            $uuid === '' ? null : $uuid,
+                            (string) ($datos['recibido_en'] ?? date('Y-m-d H:i:s')),
+                            (string) ($datos['tipo'] ?? ''),
+                            (string) ($datos['payment_id'] ?? ''),
+                            (string) ($datos['payment_link'] ?? ''),
+                            (string) ($datos['referencia'] ?? ''),
+                            (int) ($datos['firma_valida'] ?? 0),
+                            (string) ($datos['firma_recibida'] ?? ''),
+                            (string) ($datos['nota'] ?? ''),
+                            (string) ($datos['payload_json'] ?? ''),
+                        ]
         );
 
         $fila = $uuid === '' ? null : $db->query('SELECT id FROM webhook_entradas WHERE uuid = ?', [$uuid])->getRowArray();

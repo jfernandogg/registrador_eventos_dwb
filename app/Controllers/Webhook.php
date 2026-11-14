@@ -44,6 +44,7 @@ final class Webhook extends BaseController
             'payment_link' => $link,
             'referencia' => $referencia,
             'firma_valida' => (int) $firmaValida,
+            'firma_recibida' => $firma,
             'payload_json' => $cuerpo,
         ]);
 
