@@ -76,7 +76,11 @@ final class Webhook extends BaseController
                         $inscripcion = $repositorio->inscripcionPorId($idRef);
                     }
                 } else {
+                    // Puede ser el LNK o la referencia del link de pago.
                     $inscripcion = $repositorio->buscarPorReferencia($referencia);
+                    if (! is_array($inscripcion)) {
+                        $inscripcion = $repositorio->buscarPorBoldReference($referencia);
+                    }
                 }
             }
 

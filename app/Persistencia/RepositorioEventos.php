@@ -414,7 +414,7 @@ final class RepositorioEventos
         }
         $db = db_connect();
         $valores = [];
-        foreach (['payment_link', 'payment_status', 'transaction_id'] as $columna) {
+        foreach (['payment_link', 'payment_status', 'transaction_id', 'bold_reference'] as $columna) {
             if (array_key_exists($columna, $datos)) {
                 $valores[$columna] = (string) $datos[$columna];
             }
@@ -459,6 +459,24 @@ final class RepositorioEventos
     }
 
     /**
+     * Busca una inscripción por la referencia del link de pago que se guarda en
+     * `bold_reference` (la referencia enviada a Bold al crear el link). Permite
+     * asociar un webhook cuya `metadata.reference` no sea del tipo INS-{id}.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function buscarPorBoldReference(string $referencia): ?array
+    {
+        $this->asegurarColumnasPago();
+        $fila = db_connect()->table('inscripciones')
+            ->where('bold_reference', $referencia)
+            ->get()
+            ->getRowArray();
+
+        return is_array($fila) ? $fila : null;
+    }
+
+    /**
      * Agrega las columnas de pago si faltan (auto-migración).
      */
     public function asegurarColumnasPago(): void
@@ -475,6 +493,7 @@ final class RepositorioEventos
             'payment_status' => "VARCHAR(30) NULL",
             'transaction_id' => "VARCHAR(60) NULL",
             'pagado_en' => "DATETIME NULL",
+            'bold_reference' => "VARCHAR(80) NULL",
         ];
         foreach ($faltantes as $columna => $definicion) {
             if (! in_array($columna, $nombres, true)) {

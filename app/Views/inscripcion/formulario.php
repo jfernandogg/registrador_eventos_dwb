@@ -219,6 +219,7 @@ $cursosElegidos = array_values(array_filter(
     </label>
     <div id="instrucciones-pago"></div>
     <input type="hidden" name="payment_link_generado" id="payment_link_generado">
+    <input type="hidden" name="link_reference_generado" id="link_reference_generado">
     <input type="hidden" name="idempotencia" value="<?= esc($idempotencia) ?>">
     <div id="bloque-link-pago" class="si-oculto" style="border: 1px solid var(--color-borde); border-radius: var(--radio); padding: 0.9rem 1rem; margin-bottom: 0.75rem; background: #fafafa;">
         <p style="font-weight: 650; margin-bottom: 0.4rem;">Pago con tarjeta:</p>
@@ -258,6 +259,7 @@ $cursosElegidos = array_values(array_filter(
         var estadoLink = document.getElementById('link-pago-estado');
         var resultadoLink = document.getElementById('link-pago-resultado');
         var campoLink = document.getElementById('payment_link_generado');
+        var campoRef = document.getElementById('link_reference_generado');
         var form = document.getElementById('inscripcion');
 
         function mostrar() {
@@ -311,7 +313,8 @@ $cursosElegidos = array_values(array_filter(
                     btnLink.disabled = false;
                     return;
                 }
-                campoLink.value = datosJson.payment_link || '';
+                campoLink.value = datos.payment_link || '';
+                                    campoRef.value = datos.reference || '';
                 resultadoLink.innerHTML = '<a class="boton-primario" href="' + escapeHtml(datosJson.url) + '" target="_blank" rel="noopener" style="display: inline-block; text-decoration: none; padding: 0.5rem 1rem; background: var(--color-primario); color: #fff; border-radius: var(--radio); font-weight: 650;">Pagar con tarjeta (Bold)</a>';
                 estadoLink.textContent = 'Pagaste? Bajá el comprobante del pago y subilo abajo para terminar la inscripción.';
             } catch (e) {

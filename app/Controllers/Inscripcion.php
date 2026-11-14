@@ -94,9 +94,12 @@ class Inscripcion extends BaseController
             ]);
         }
 
+        // Referencia externa del link: único, permitirá asociar el webhook en
+        // producción (metadata.reference) aunque no traiga el LNK.
+        $reference = 'REG-' . strtoupper(bin2hex(random_bytes(5)));
         try {
             $link = $bold->crearLink([
-                'reference' => 'REG-' . strtoupper(bin2hex(random_bytes(5))),
+                'reference' => $reference,
                 'amount' => $total,
                 'description' => mb_substr($programa->nombre, 0, 100),
                 'payer_email' => trim((string) ($this->request->getPost('correo') ?? '')),
@@ -108,6 +111,7 @@ class Inscripcion extends BaseController
         return $this->response->setStatusCode(200)->setJSON([
             'url' => $link['url'] ?? $bold->urlDelLink((string) $link['payment_link']),
             'payment_link' => $link['payment_link'],
+            'reference' => $reference,
         ]);
     }
 
@@ -116,6 +120,7 @@ class Inscripcion extends BaseController
         $programa = $this->programa($slug);
         // Enlace de pago que se haya generado antes de confirmar.
         $linkGenerado = trim((string) ($this->request->getPost('payment_link_generado') ?? ''));
+        $linkRefGenerado = trim((string) ($this->request->getPost('link_reference_generado') ?? ''));
         $confirmar = $this->request->getPost('accion') === 'confirmar';
         $archivo = $this->request->getFile('comprobante');
         $nonce = (string) ($this->request->getPost('idempotencia') ?? '');
@@ -170,10 +175,11 @@ class Inscripcion extends BaseController
             } else {
                 // Si se generó un link de pago antes de confirmar, asociarlo.
                 if ($linkGenerado !== '' && preg_match('/^LNK_[A-Za-z0-9]+$/', $linkGenerado) === 1) {
-                    $this->eventos->guardarPago((int) $guardadoDb['id'], [
-                        'payment_link' => $linkGenerado,
-                        'payment_status' => 'ACTIVE',
-                    ]);
+                    $pagoEstado = ['payment_link' => $linkGenerado, 'payment_status' => 'ACTIVE'];
+                    if ($linkRefGenerado !== '' && preg_match('/^[A-Za-z0-9-]+$/', $linkRefGenerado) === 1) {
+                        $pagoEstado['bold_reference'] = $linkRefGenerado;
+                    }
+                    $this->eventos->guardarPago((int) $guardadoDb['id'], $pagoEstado);
                 }
 
                 $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
