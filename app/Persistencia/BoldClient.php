@@ -130,9 +130,23 @@ final class BoldClient
         if ($firma === '') {
             return false;
         }
-        $esperado = hash_hmac('sha256', base64_encode($body), $this->secretKey);
+        $encoded = base64_encode($body);
 
-        return hash_equals($esperado, $firma);
+        // Bold firma con la llave secreta configurada en producción, PERO en
+        // ambiente de pruebas la firma usa una clave vacía (documentación de
+        // webhook: "$secretKey = '';"). En sandbox se acepta la llave guardada
+        // o la vacía; en producción solo la llave guardada.
+        $claves = [$this->secretKey];
+        if ($this->sandbox) {
+            $claves[] = '';
+        }
+        foreach ($claves as $clave) {
+            if (hash_equals(hash_hmac('sha256', $encoded, $clave), $firma)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function llaveSecreta(): string

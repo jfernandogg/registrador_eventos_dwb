@@ -31,7 +31,9 @@ final class Webhook extends BaseController
         $paymentId = (string) ($datos['payment_id'] ?? '');
         $link = (string) ($datos['payment_link'] ?? '');
         $referencia = (string) ($datos['metadata']['reference'] ?? '');
-        $uuid = is_array($evento) ? (string) ($evento['uuid'] ?? '') : '';
+        // CloudEvents identifica la notificación en el campo `id` (UUID único). Se usa
+        // para que un reintento de Bold actualice la misma entrada (idempotencia).
+        $uuid = is_array($evento) ? (string) ($evento['id'] ?? $evento['uuid'] ?? '') : '';
 
         $firmaValida = $bold->configurado() && $bold->validarFirma($cuerpo, $firma);
 
