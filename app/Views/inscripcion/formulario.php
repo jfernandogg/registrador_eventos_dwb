@@ -338,8 +338,10 @@ $cursosElegidos = array_values(array_filter(
                 evento.preventDefault(); // segundo envío del mismo form → no repetir
                 return;
             }
+            // NO deshabilitar el botón aquí: en el submit, al deshabilitarlo el navegador
+            // omite su name/value y el body llega sin "accion=confirmar", así que el
+            // servidor no guarda. El flag enviando + preventDefault ya evita el doble envío.
             form.dataset.enviando = '1';
-            form.querySelectorAll('.acciones button').forEach(function (b) { b.disabled = true; });
             btnTerminar.textContent = 'Enviando…';
         });
 
