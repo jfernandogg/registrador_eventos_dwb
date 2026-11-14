@@ -231,7 +231,7 @@ input:focus, select:focus, textarea:focus {
 
 .avisos ul { margin: 0.3rem 0 0; padding-left: 1.2rem; }
 
-.error-campo { color: var(--color-alerta); margin: 0; font-size: 0.85rem; }
+.error-campo, .error { color: var(--color-alerta); margin: 0; font-size: 0.85rem; }
 
 /* Botones */
 button, .boton {
