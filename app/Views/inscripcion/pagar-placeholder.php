@@ -10,7 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pagar · <?= esc($programa->nombre) ?></title>
-    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css?v=' . filemtime(FCPATH . 'css/publico.css')) ?>">
 </head>
 <body>
 <header class="marca-cabecera">

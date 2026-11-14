@@ -9,7 +9,7 @@ $pesos = static fn (int $monto): string => number_format($monto, 0, ',', '.');
     <meta name="description" content="Inscripción a <?= esc($evento) ?> · Budismo Camino del Diamante Colombia">
     <title>Recibo · <?= esc($evento) ?></title>
     <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
-    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css?v=' . filemtime(FCPATH . 'css/publico.css')) ?>">
 </head>
 <body>
 <header class="marca-cabecera">

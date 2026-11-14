@@ -34,7 +34,7 @@ $cursosElegidos = array_values(array_filter(
     <meta name="description" content="Inscripción a <?= esc($programa->nombre) ?> · Budismo Camino del Diamante Colombia">
     <title><?= esc($programa->nombre) ?></title>
     <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
-    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css?v=' . filemtime(FCPATH . 'css/publico.css')) ?>">
 </head>
 <body>
 <a class="saltar-vista" href="#formulario-inicio">Saltar al formulario</a>
@@ -350,7 +350,7 @@ $cursosElegidos = array_values(array_filter(
         mostrar();
     })();
     </script>
-    <script src="<?= base_url('js/inscripcion.js') ?>"></script>
+    <script src="<?= base_url('js/inscripcion.js?v=' . filemtime(FCPATH . 'js/inscripcion.js')) ?>"></script>
 </main>
 </body>
 </html>

@@ -9,7 +9,7 @@
     <meta name="description" content="Inscripciones a eventos de Budismo Camino del Diamante Colombia">
     <title>Inscripciones</title>
     <link rel="icon" href="<?= base_url('favicon.svg') ?>" type="image/svg+xml">
-    <link rel="stylesheet" href="<?= base_url('css/publico.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/publico.css?v=' . filemtime(FCPATH . 'css/publico.css')) ?>">
 </head>
 <body>
 <header class="marca-cabecera">
