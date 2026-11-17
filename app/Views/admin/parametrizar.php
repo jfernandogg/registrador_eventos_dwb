@@ -45,7 +45,7 @@ $conteos = [
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $nuevo ? 'Nuevo evento' : 'Parametrizar evento' ?></title>
-    <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/admin.css?v=' . filemtime(FCPATH . 'css/admin.css')) ?>">
 </head>
 <body>
 <a class="saltar" href="#editor">Saltar al formulario</a>
@@ -129,7 +129,7 @@ $conteos = [
         <section class="panel" id="cursos">
             <h2>Cursos</h2>
             <p class="intro">Cada curso es una opción del evento. La tarifa es el precio del curso. Si hay un campo con rol edad, el descuento solo toca esta tarifa.</p>
-            <table class="tabla">
+            <table class="tabla tarjetas">
                 <thead><tr><th>Código</th><th>Nombre</th><th>Tarifa</th><th>Inicio</th><th>Fin</th><th></th></tr></thead>
                 <tbody id="cursos-filas">
                 <?php for ($i = 0; $i < $n(['curso_codigo', 'curso_nombre', 'curso_tarifa', 'curso_inicio', 'curso_fin']); $i++): ?>
@@ -199,7 +199,7 @@ $conteos = [
         <section class="panel" id="sesiones">
             <h2>Sesiones</h2>
             <p class="intro">Subdivisión de un curso: enseñanzas, meditaciones, trabajos. Elegir sesiones sueltas no necesariamente suma lo mismo que el curso completo.</p>
-            <table class="tabla">
+            <table class="tabla tarjetas">
                 <thead><tr><th>Curso</th><th>Id</th><th>Título</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Costo</th><th></th></tr></thead>
                 <tbody id="sesiones-filas">
                 <?php for ($i = 0; $i < $n(['sesion_curso', 'sesion_id', 'sesion_titulo']); $i++): ?>
@@ -324,7 +324,7 @@ $conteos = [
         <section class="panel" id="ficha">
             <h2>Ficha del participante</h2>
             <p class="intro">Estos campos se pintan solos en la inscripción. Un grupo agrupa campos hijos; el padre de esos hijos es la clave del grupo.</p>
-            <table class="tabla">
+            <table class="tabla tarjetas">
                 <thead><tr><th>Clave</th><th>Pregunta</th><th>Tipo</th><th>Obligatorio</th><th>Opciones</th><th>Visible si</th><th>Rol</th><th>Padre</th><th></th></tr></thead>
                 <tbody id="campos-filas">
                 <?php for ($i = 0; $i < $n(['campo_clave', 'campo_etiqueta']); $i++): ?>
@@ -497,6 +497,6 @@ $conteos = [
     document.querySelectorAll('#sesiones-filas tr').forEach(constrenirSesion);
 })();
 </script>
-<script src="<?= base_url('js/editor.js') ?>"></script>
+<script src="<?= base_url('js/editor.js?v=' . filemtime(FCPATH . 'js/editor.js')) ?>"></script>
 </body>
 </html>

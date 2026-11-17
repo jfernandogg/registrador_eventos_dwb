@@ -164,6 +164,63 @@ input:focus, select:focus, textarea:focus {
 
 .tabla td { padding: 0.35rem 0.4rem 0.7rem; vertical-align: top; }
 
+/* Filas como tarjetas para secciones anchas (cursos, sesiones): cada fila pasa
+   a ser una tarjeta con los campos en cuadrícula responsive y su etiqueta
+   encima, para que los inputs tengan ancho legible en vez de apretados
+   horizontalmente. Reutiliza data-etiqueta (antes solo para móvil). */
+.tabla.tarjetas { display: block; }
+
+.tabla.tarjetas thead { display: none; }
+
+.tabla.tarjetas tbody {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.tabla.tarjetas tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+    gap: 0.7rem 0.85rem;
+    align-items: start;
+    padding: 0.8rem;
+    margin: 0;
+    background: #fafafa;
+    border: 1px solid var(--linea);
+    border-radius: var(--radio);
+}
+
+.tabla.tarjetas td { padding: 0; }
+
+.tabla.tarjetas td::before {
+    content: attr(data-etiqueta);
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 650;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+}
+
+.tabla.tarjetas td:not([data-etiqueta]) {
+    justify-self: end;
+    align-self: end;
+}
+
+/* Ficha: el textarea de opciones y la pregunta necesitan el doble de ancho */
+.tabla.tarjetas td:has(textarea),
+.tabla.tarjetas td:has(input[name="campo_etiqueta[]"]) {
+    grid-column: span 2;
+}
+
+/* Ficha: campos dependientes (fila-hijo) en modo tarjeta */
+.tabla.tarjetas .fila-hijo {
+    background: #eef1f4;
+    border-color: #c6ccd4;
+}
+
+.tabla.tarjetas .fila-hijo td { background: transparent; }
+
+.tabla.tarjetas .fila-hijo td:first-child input { padding-left: 0.65rem; }
+
 .alerta {
     padding: 0.75rem 0.9rem;
     border-radius: var(--radio);
