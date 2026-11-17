@@ -125,3 +125,17 @@ _modules/*
 /results/
 /phpunit.xml
 NUL
+
+#-------------------------
+# Notas internas (Hermes) que no van al repositorio público
+#-------------------------
+.hermes/
+
+#-------------------------
+# Variables de entorno: nunca versionar valores reales
+#-------------------------
+.env.*
+!.env.production.example
+
+# Cachés de herramientas de test
+.phpunit.result.cache

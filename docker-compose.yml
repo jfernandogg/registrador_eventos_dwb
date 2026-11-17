@@ -15,10 +15,12 @@ services:
   db:
     image: docker.io/library/mariadb:10.11
     environment:
-      MARIADB_ROOT_PASSWORD: registrador
-      MARIADB_DATABASE: registrador
-      MARIADB_USER: registrador
-      MARIADB_PASSWORD: registrador
+      # Solo valores de desarrollo local. Se pueden sobrescribir con variables
+      # del entorno (ej. MARIADB_PASSWORD=otro docker compose up -d).
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-registrador}
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-registrador}
+      MARIADB_USER: ${MARIADB_USER:-registrador}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:-registrador}
     ports:
       - "3306:3306"
     volumes:
