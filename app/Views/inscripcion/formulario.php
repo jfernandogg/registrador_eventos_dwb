@@ -47,22 +47,32 @@ $cursosElegidos = array_values(array_filter(
 <main class="contenedor" id="formulario-inicio">
     <h1><?= esc($programa->nombre) ?></h1>
     <p class="subtitulo">Al marcar un curso aparecen sus preguntas. El total se actualiza solo: cada comida suma <?= $pesos($programa->catalogo->precioComida) ?> y cada bus del curso, <?= $pesos($programa->catalogo->precioFranjaBus) ?>. La dieta, los equipos y el alojamiento no cambian el valor.</p>
-    <aside class="total-caja" id="total">
-        <p>Total en línea</p>
-        <div class="total-monto" id="total-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></div>
-        <ul class="total-lineas" id="total-lineas">
-            <?php if ($cotizacion !== null): ?>
-                <?php foreach ([...$cotizacion->lineas, ...$cotizacion->ajustes] as $linea): ?>
-                    <li><?= esc($linea->descripcion) ?>: $ <?= $pesos($linea->subtotal()) ?></li>
-                <?php endforeach ?>
-            <?php endif ?>
-        </ul>
-        <div class="total-notas" id="total-notas">
-            <?php foreach ($notas as $nota): ?>
-                <p><?= esc($nota) ?></p>
-            <?php endforeach ?>
-        </div>
-    </aside>
+    <aside class="total-caja" id="total" aria-expanded="false">
+            <button type="button" class="total-mini" id="total-expandir" aria-controls="total-detalle" aria-label="Ampliar el resumen">
+                <span class="total-mini-etiqueta">Total</span>
+                <strong class="total-mini-monto" id="total-mini-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></strong>
+                <span class="total-chevron" aria-hidden="true">▲</span>
+            </button>
+            <div class="total-detalle" id="total-detalle">
+                <div class="total-detalle-cabecera">
+                    <strong>Resumen de tu inscripción</strong>
+                    <button type="button" class="total-cerrar" id="total-colapsar" aria-label="Colapsar el resumen">Cerrar</button>
+                </div>
+                <div class="total-monto" id="total-monto"><?= $cotizacion !== null ? '$ ' . $pesos($cotizacion->total()) : '—' ?></div>
+                <ul class="total-lineas" id="total-lineas">
+                    <?php if ($cotizacion !== null): ?>
+                        <?php foreach ([...$cotizacion->lineas, ...$cotizacion->ajustes] as $linea): ?>
+                            <li><?= esc($linea->descripcion) ?>: $ <?= $pesos($linea->subtotal()) ?></li>
+                        <?php endforeach ?>
+                    <?php endif ?>
+                </ul>
+                <div class="total-notas" id="total-notas">
+                    <?php foreach ($notas as $nota): ?>
+                        <p><?= esc($nota) ?></p>
+                    <?php endforeach ?>
+                </div>
+            </div>
+        </aside>
     <div class="avisos si-oculto" id="avisos">
         <strong>Revisa estos datos antes de continuar:</strong>
         <ul id="avisos-lista"></ul>

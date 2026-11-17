@@ -10,7 +10,17 @@
     const totalMonto = document.getElementById('total-monto');
     const totalLineas = document.getElementById('total-lineas');
     const totalNotas = document.getElementById('total-notas');
+    const totalMini = document.getElementById('total-mini-monto');
+    const btnExpandir = document.getElementById('total-expandir');
+    const btnColapsar = document.getElementById('total-colapsar');
     let pedido = 0;
+
+    function setTotalExpandido(abierto) {
+        totalCaja.classList.toggle('total-abierto', abierto);
+        totalCaja.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+    }
+    btnExpandir?.addEventListener('click', () => setTotalExpandido(true));
+    btnColapsar?.addEventListener('click', () => setTotalExpandido(false));
 
     const campo = (nombre) => form.querySelector(`[name="${nombre}"]`);
     const valor = (nombre) => campo(nombre)?.value.trim() ?? '';
@@ -87,6 +97,9 @@
 
     function mostrarSpinner() {
         totalMonto.textContent = '';
+        if (totalMini) {
+            totalMini.textContent = '…';
+        }
         const spinner = document.createElement('div');
         spinner.className = 'total-spinner';
         for (let i = 0; i < 3; i++) {
@@ -97,7 +110,11 @@
     }
 
     function pintarTotal(datos) {
-        totalMonto.textContent = datos.total_formato === null ? '—' : `$ ${datos.total_formato}`;
+        const total = datos.total_formato === null ? '—' : `$ ${datos.total_formato}`;
+        totalMonto.textContent = total;
+        if (totalMini) {
+            totalMini.textContent = total;
+        }
         totalLineas.replaceChildren(...(datos.lineas || []).map((linea) => {
             const item = document.createElement('li');
             item.textContent = `${linea.descripcion}: $ ${linea.subtotal}`;
@@ -209,7 +226,7 @@
         evento.preventDefault();
         aplicar();
         pedirTotal();
-        totalCaja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTotalExpandido(true);
     });
 
     form.querySelector('[value="confirmar"]')?.addEventListener('click', (evento) => {

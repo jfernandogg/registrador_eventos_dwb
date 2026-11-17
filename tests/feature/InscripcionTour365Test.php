@@ -54,7 +54,7 @@ final class InscripcionTour365Test extends CIUnitTestCase
 
         $result->assertOK();
         $result->assertSee('190.000');
-        $result->assertSee('Total en línea');
+        $result->assertSee('Resumen de tu inscripción');
     }
 
     public function testCotizarRespondeJson(): void
