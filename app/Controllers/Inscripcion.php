@@ -182,11 +182,15 @@ class Inscripcion extends BaseController
                     $this->eventos->guardarPago((int) $guardadoDb['id'], $pagoEstado);
                 }
 
-                $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
-
+                // Asociar el nonce con la inscripción ANTES de enviar el correo
+                // (que es lento). Así, un doble envío concurrente del mismo
+                // formulario ya ve inscripcion_id y puede redirigir al recibo en
+                // lugar de volver a pintar el formulario en blanco.
                 if ($reclama !== null) {
                     $this->eventos->completarIntento($reclama, (int) $guardadoDb['id']);
                 }
+
+                $this->notificarInscripcion($slug, $recibo, $entrada, $programa, (int) $guardadoDb['id']);
 
                 return redirect()->to('/e/' . $slug . '/recibo/' . $guardadoDb['id']);
             }

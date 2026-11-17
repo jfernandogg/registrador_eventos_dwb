@@ -742,9 +742,44 @@ final class RepositorioEventos
                 // Tabla no disponible: se comporta como primer intento.
                 return ['nuevo' => true, 'fila' => null];
             }
-            $fila = $db->table('intentos_enviados')->where('nonce', $nonce)->get()->getRowArray();
+            // Reintento del mismo formulario (mismo nonce). Casos posibles:
+            //  - El primer envío ya guardó (inscripcion_id > 0) -> ir al recibo.
+            //  - El primer envío falló (terminado=1 sin inscripción) -> reactivar
+            //    el nonce para que este reintento reprocese y llegue al recibo; si
+            //    no, tras corregir un error el usuario quedaría atascado en el
+            //    formulario.
+            //  - El primer envío sigue en curso (terminado=0 sin inscripción) ->
+            //    esperar a que se asiente.
+            $fila = null;
+            for ($i = 0; $i < 20; $i++) {
+                $registro = $db->table('intentos_enviados')->where('nonce', $nonce)->limit(1)->get()->getRowArray();
+                $fila = is_array($registro) ? $registro : null;
+                if ($fila === null) {
+                    break;
+                }
+                if ((int) $fila['inscripcion_id'] > 0) {
+                    // El primer envío guardó la inscripción: mostrar su recibo.
+                    return ['nuevo' => false, 'fila' => $fila];
+                }
+                if ((int) $fila['terminado'] === 1) {
+                    // El intento anterior falló sin guardar: reactivar el nonce.
+                    // El UPDATE es atómico (condición terminado=1): solo el primer
+                    // reintento que lo gane reprocesa; los demás esperan o ven el
+                    // recibo.
+                    $db->table('intentos_enviados')
+                        ->where('nonce', $nonce)
+                        ->where('terminado', 1)
+                        ->where('inscripcion_id', null)
+                        ->update(['terminado' => 0]);
+                    if ($db->affectedRows() === 1) {
+                        return ['nuevo' => true, 'fila' => null];
+                    }
+                    // Otro reintento concurrente ganó la reactivación: seguir.
+                }
+                usleep(250000); // 250 ms (hasta ~5 s)
+            }
 
-            return ['nuevo' => false, 'fila' => is_array($fila) ? $fila : null];
+            return ['nuevo' => false, 'fila' => $fila];
         }
     }
 
